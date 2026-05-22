@@ -9,6 +9,7 @@ sys.path.insert(0, str(ROOT))
 
 from sentiment_critic.analyzer import analyze_reviews
 from sentiment_critic.collectors import collect_reviews
+from sentiment_critic.douban import collect_douban_reviews
 from sentiment_critic.dashboard import render_dashboard
 from sentiment_critic.models import write_json, write_jsonl
 
@@ -17,6 +18,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="一键执行采集、Agent 分析、舆情看板生成。")
     parser.add_argument("--book", required=True, help="小说名")
     parser.add_argument("--platform", action="append", choices=["tieba", "douban", "xiaohongshu"], help="要搜索的平台，可重复")
+    parser.add_argument("--subject-id", default="", help="豆瓣图书 subject id；只抓豆瓣时推荐填写")
+    parser.add_argument("--subject-url", default="", help="豆瓣图书页面 URL；只抓豆瓣时可填写")
+    parser.add_argument("--no-full-review", action="store_true", help="豆瓣模式下只抓列表摘要，不进入书评详情页")
     parser.add_argument("--url", action="append", help="指定评论页或搜索结果页 URL，可重复")
     parser.add_argument("--input-html", action="append", help="本地 HTML 文件，可重复")
     parser.add_argument("--input", default="", help="已有评论 JSONL；提供后会和抓取结果合并")
@@ -32,17 +36,31 @@ def main() -> None:
     parser.add_argument("--allow-empty-output", action="store_true", help="允许用空结果覆盖输出文件并继续生成空报告")
     args = parser.parse_args()
 
-    reviews = collect_reviews(
-        book=args.book,
-        platforms=args.platform,
-        urls=args.url,
-        input_html=args.input_html,
-        input_jsonl=args.input,
-        max_pages=args.max_pages,
-        min_chars=args.min_chars,
-        limit=args.limit,
-        strict=args.strict,
-    )
+    platforms = args.platform or []
+    if platforms == ["douban"] and not args.url:
+        reviews = collect_douban_reviews(
+            book=args.book,
+            subject_id=args.subject_id,
+            subject_url=args.subject_url,
+            pages=args.max_pages,
+            limit=args.limit,
+            min_chars=args.min_chars,
+            fetch_full=not args.no_full_review,
+            input_html=args.input_html,
+            input_jsonl=args.input,
+        )
+    else:
+        reviews = collect_reviews(
+            book=args.book,
+            platforms=args.platform,
+            urls=args.url,
+            input_html=args.input_html,
+            input_jsonl=args.input,
+            max_pages=args.max_pages,
+            min_chars=args.min_chars,
+            limit=args.limit,
+            strict=args.strict,
+        )
     if not reviews and not args.allow_empty_output:
         print(
             "No reviews collected; existing raw/report/dashboard outputs were not overwritten. "
