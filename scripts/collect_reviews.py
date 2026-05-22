@@ -22,6 +22,8 @@ def main() -> None:
     parser.add_argument("--max-pages", type=int, default=1, help="每个平台搜索页数")
     parser.add_argument("--min-chars", type=int, default=80, help="深度评论最小字数")
     parser.add_argument("--limit", type=int, default=100, help="最多保留评论数")
+    parser.add_argument("--strict", action="store_true", help="抓取失败时立即退出；默认会跳过失败页面")
+    parser.add_argument("--allow-empty-output", action="store_true", help="允许用空结果覆盖输出文件")
     args = parser.parse_args()
 
     reviews = collect_reviews(
@@ -33,7 +35,14 @@ def main() -> None:
         max_pages=args.max_pages,
         min_chars=args.min_chars,
         limit=args.limit,
+        strict=args.strict,
     )
+    if not reviews and not args.allow_empty_output:
+        print(
+            f"No reviews collected; {args.output} was not overwritten. "
+            "Use --allow-empty-output if you really want an empty file."
+        )
+        return
     write_jsonl(args.output, reviews)
     print(f"Collected {len(reviews)} reviews -> {args.output}")
 

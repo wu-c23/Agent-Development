@@ -60,6 +60,15 @@ $env:TIEBA_COOKIE="你的 cookie"
 
 社交平台反爬和页面结构经常变化，稳定课堂演示时推荐先保存 HTML 或整理 JSONL，再用 `--input-html` / `--input-jsonl` 导入。
 
+默认情况下，某个平台返回 403、安全验证或网络错误时，采集脚本会打印 `[warn]` 并继续处理其他平台/输入源；如果你希望一遇到错误就退出，加 `--strict`。
+如果所有在线页面都失败，脚本默认不会用空结果覆盖已有输出；确实需要空文件时加 `--allow-empty-output`。
+
+如果误抓到了脚本、页脚、备案信息等非书评内容，可以清洗已有 JSONL：
+
+```powershell
+python scripts/clean_reviews.py --input data/raw_reviews.jsonl --output data/raw_reviews.cleaned.jsonl --book "小说名"
+```
+
 ## 分步运行
 
 ```powershell

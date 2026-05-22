@@ -28,6 +28,8 @@ def main() -> None:
     parser.add_argument("--limit", type=int, default=100)
     parser.add_argument("--batch-size", type=int, default=6)
     parser.add_argument("--no-agent", action="store_true", help="不调用模型，使用本地启发式规则")
+    parser.add_argument("--strict", action="store_true", help="抓取失败时立即退出；默认会跳过失败页面")
+    parser.add_argument("--allow-empty-output", action="store_true", help="允许用空结果覆盖输出文件并继续生成空报告")
     args = parser.parse_args()
 
     reviews = collect_reviews(
@@ -39,7 +41,14 @@ def main() -> None:
         max_pages=args.max_pages,
         min_chars=args.min_chars,
         limit=args.limit,
+        strict=args.strict,
     )
+    if not reviews and not args.allow_empty_output:
+        print(
+            "No reviews collected; existing raw/report/dashboard outputs were not overwritten. "
+            "Use --allow-empty-output if you really want empty artifacts."
+        )
+        return
     write_jsonl(args.raw_output, reviews)
 
     report = analyze_reviews(reviews, use_agent=not args.no_agent, batch_size=args.batch_size)

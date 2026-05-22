@@ -49,8 +49,12 @@ class ReviewHTMLParser(HTMLParser):
         self.blocks: list[str] = []
         self._stack: list[str] = []
         self._buffer: list[str] = []
+        self._ignore_depth = 0
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        if tag in {"script", "style", "noscript", "svg", "canvas", "template"}:
+            self._ignore_depth += 1
+            return
         attr_map = {key.lower(): value or "" for key, value in attrs}
         if tag == "meta":
             name = (attr_map.get("name") or attr_map.get("property") or "").lower()
@@ -61,12 +65,17 @@ class ReviewHTMLParser(HTMLParser):
             self._buffer = []
 
     def handle_data(self, data: str) -> None:
+        if self._ignore_depth:
+            return
         if self._stack:
             cleaned = normalize_space(data)
             if cleaned:
                 self._buffer.append(cleaned)
 
     def handle_endtag(self, tag: str) -> None:
+        if tag in {"script", "style", "noscript", "svg", "canvas", "template"}:
+            self._ignore_depth = max(0, self._ignore_depth - 1)
+            return
         if not self._stack:
             return
         if tag != self._stack[-1]:
@@ -109,7 +118,9 @@ def fetch_url(url: str, platform: str = "") -> str:
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
             "(KHTML, like Gecko) Chrome/124.0 Safari/537.36",
         ),
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "Accept-Language": "zh-CN,zh;q=0.9,en;q=0.6",
+        "Referer": platform_referer(platform),
     }
     cookie = platform_cookie(platform)
     if cookie:
@@ -133,6 +144,14 @@ def platform_cookie(platform: str) -> str:
         "xiaohongshu": "XHS_COOKIE",
     }.get(platform.lower(), "")
     return os.getenv(key, "") if key else ""
+
+
+def platform_referer(platform: str) -> str:
+    return {
+        "tieba": "https://tieba.baidu.com/",
+        "douban": "https://www.douban.com/",
+        "xiaohongshu": "https://www.xiaohongshu.com/",
+    }.get(platform.lower(), "")
 
 
 def extract_reviews_from_html(
@@ -170,12 +189,12 @@ def candidate_review_blocks(
     min_chars: int,
 ) -> list[str]:
     candidates: list[str] = []
-    if len(description) >= min_chars and relevance_score(description, book) > 0:
+    if is_review_like(description, book, min_chars):
         candidates.append(description)
 
     paragraphs = [block for block in blocks if len(block) >= 18]
     for block in paragraphs:
-        if len(block) >= min_chars and relevance_score(block, book) >= 1:
+        if is_review_like(block, book, min_chars):
             candidates.append(trim_review(block))
 
     window: list[str] = []
@@ -183,7 +202,7 @@ def candidate_review_blocks(
         window.append(block)
         text = normalize_space(" ".join(window))
         if len(text) >= min_chars:
-            if relevance_score(text, book) >= 2:
+            if is_review_like(text, book, min_chars):
                 candidates.append(trim_review(text))
             window = []
 
@@ -198,6 +217,59 @@ def relevance_score(text: str, book: str) -> int:
     if len(text) >= 180:
         score += 1
     return score
+
+
+def is_review_like(text: str, book: str, min_chars: int = 80) -> bool:
+    text = normalize_space(text)
+    if looks_like_boilerplate(text):
+        return False
+    chinese_count = chinese_char_count(text)
+    relevance = relevance_score(text, book)
+    if chinese_count < 40:
+        return False
+    if sentence_mark_count(text) < 2:
+        return False
+    if len(text) >= min_chars:
+        return relevance >= 2
+    return chinese_count >= 60 and relevance >= 4
+
+
+def looks_like_boilerplate(text: str) -> bool:
+    lower = text.lower()
+    code_markers = (
+        "function",
+        "var ",
+        "window.",
+        "document.",
+        "json.",
+        "encodeuricomponent",
+        "addeventlistener",
+        "rendersearchresult",
+        "search_config",
+    )
+    boilerplate_markers = (
+        "备案",
+        "营业执照",
+        "许可证",
+        "举报",
+        "用户协议",
+        "隐私政策",
+        "违法不良信息",
+        "算法",
+        "安全验证",
+        "captcha",
+    )
+    if any(marker in lower for marker in code_markers):
+        return True
+    return any(marker in text for marker in boilerplate_markers)
+
+
+def chinese_char_count(text: str) -> int:
+    return sum(1 for char in text if "\u4e00" <= char <= "\u9fff")
+
+
+def sentence_mark_count(text: str) -> int:
+    return sum(text.count(mark) for mark in "。！？；，")
 
 
 def trim_review(text: str, max_chars: int = 2400) -> str:
@@ -233,8 +305,10 @@ def collect_reviews(
     max_pages: int = 1,
     min_chars: int = 80,
     limit: int = 100,
+    strict: bool = False,
 ) -> list[Review]:
     reviews: list[Review] = []
+    errors: list[str] = []
 
     if input_jsonl:
         reviews.extend(read_jsonl(input_jsonl, fallback_book=book))
@@ -247,17 +321,37 @@ def collect_reviews(
 
     for url in urls or []:
         platform = infer_platform(url)
-        html = fetch_url(url, platform=platform)
+        try:
+            html = fetch_url(url, platform=platform)
+        except RuntimeError as exc:
+            if strict:
+                raise
+            errors.append(str(exc))
+            continue
         reviews.extend(extract_reviews_from_html(html, book, platform, url, min_chars))
 
     for platform in platforms or []:
         platform = platform.lower()
         for page_index in range(max_pages):
             url = build_search_url(platform, book, page_index)
-            html = fetch_url(url, platform=platform)
+            try:
+                html = fetch_url(url, platform=platform)
+            except RuntimeError as exc:
+                if strict:
+                    raise
+                errors.append(str(exc))
+                break
             reviews.extend(extract_reviews_from_html(html, book, platform, url, min_chars))
             if platform == "xiaohongshu":
                 break
 
     unique = dedupe_reviews(review for review in reviews if review.content)
+    for error in errors:
+        print(f"[warn] skipped blocked/unavailable page: {error}")
+    if errors and not unique:
+        print(
+            "[warn] no reviews collected from live pages. "
+            "Try --url with a specific review page, --input-html with saved pages, "
+            "or set platform cookies such as TIEBA_COOKIE/DOUBAN_COOKIE/XHS_COOKIE."
+        )
     return unique[:limit]
