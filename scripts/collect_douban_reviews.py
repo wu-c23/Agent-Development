@@ -7,7 +7,8 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
-from sentiment_critic.douban import collect_douban_reviews
+from sentiment_critic.douban import DoubanBookReviewCrawler, collect_douban_reviews
+from sentiment_critic.douban import load_subject_from_cache, load_subject_from_existing_reviews
 from sentiment_critic.models import write_jsonl
 
 
@@ -28,8 +29,28 @@ def main() -> None:
     parser.add_argument("--timeout", type=int, default=20, help="请求超时秒数")
     parser.add_argument("--retries", type=int, default=2, help="失败重试次数")
     parser.add_argument("--no-full-review", action="store_true", help="只用列表页摘要，不进入单篇书评页抓全文")
+    parser.add_argument("--search-only", action="store_true", help="只搜索豆瓣图书条目并打印候选 subject，不抓书评")
     parser.add_argument("--allow-empty-output", action="store_true", help="允许用空结果覆盖输出文件")
     args = parser.parse_args()
+
+    if args.search_only:
+        cached = load_subject_from_cache(args.book) or load_subject_from_existing_reviews(args.book)
+        if cached:
+            print(f"{cached.subject_id}\t{cached.title}\t{cached.url}\t{cached.summary}\t(local)")
+            return
+        crawler = DoubanBookReviewCrawler(
+            cookie=args.cookie,
+            delay=args.delay,
+            timeout=args.timeout,
+            retries=args.retries,
+        )
+        subjects = crawler.search_subjects(args.book)
+        if not subjects:
+            print("No Douban subjects found. Try setting DOUBAN_COOKIE or passing --subject-url manually.")
+            return
+        for subject in subjects:
+            print(f"{subject.subject_id}\t{subject.title}\t{subject.url}\t{subject.summary}")
+        return
 
     reviews = collect_douban_reviews(
         book=args.book,

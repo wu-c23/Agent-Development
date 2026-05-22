@@ -4,8 +4,9 @@ from dataclasses import dataclass
 from pathlib import Path
 from random import uniform
 from time import sleep
-from typing import Iterable
+from typing import Any, Iterable
 from urllib.parse import quote_plus, urljoin
+import json
 import os
 import re
 
@@ -20,6 +21,8 @@ DOUBAN_HOST = "https://book.douban.com"
 SUBJECT_RE = re.compile(r"/subject/(\d+)/?")
 REVIEW_RE = re.compile(r"/review/(\d+)/?")
 STAR_RE = re.compile(r"allstar(\d+)")
+SUBJECT_HINT_RE = re.compile(r"(?:/subject/|sid['\"]?\s*[:=]\s*['\"]?)(\d+)")
+DEFAULT_SUBJECT_CACHE = Path("data/douban_subject_cache.json")
 
 
 @dataclass
@@ -83,6 +86,7 @@ class DoubanBookReviewCrawler:
             reviews.extend(read_jsonl(input_jsonl, fallback_book=book))
 
         subject = self.resolve_subject(book, subject_id=subject_id, subject_url=subject_url)
+        save_subject_cache(subject, book)
         print(f"[douban] subject: {subject.title} ({subject.subject_id})")
 
         for page_index in range(max(pages, 1)):
@@ -110,13 +114,28 @@ class DoubanBookReviewCrawler:
     def resolve_subject(self, book: str, subject_id: str = "", subject_url: str = "") -> DoubanSubject:
         if subject_id:
             subject_url = f"{DOUBAN_HOST}/subject/{subject_id}/"
-            return DoubanSubject(subject_id=subject_id, title=book or subject_id, url=subject_url)
+            subject = DoubanSubject(subject_id=subject_id, title=book or subject_id, url=subject_url)
+            save_subject_cache(subject, book)
+            return subject
 
         if subject_url:
             subject_id = extract_subject_id(subject_url)
             if not subject_id:
                 raise ValueError(f"Cannot parse Douban subject id from {subject_url}")
-            return DoubanSubject(subject_id=subject_id, title=book or subject_id, url=subject_url)
+            subject = DoubanSubject(subject_id=subject_id, title=book or subject_id, url=subject_url)
+            save_subject_cache(subject, book)
+            return subject
+
+        cached = load_subject_from_cache(book)
+        if cached:
+            print(f"[douban] subject cache hit: {cached.title} ({cached.subject_id})")
+            return cached
+
+        previous = load_subject_from_existing_reviews(book)
+        if previous:
+            print(f"[douban] inferred subject from existing reviews: {previous.title} ({previous.subject_id})")
+            save_subject_cache(previous, book)
+            return previous
 
         candidates = self.search_subjects(book)
         if not candidates:
@@ -130,11 +149,20 @@ class DoubanBookReviewCrawler:
         return candidates[0]
 
     def search_subjects(self, book: str, limit: int = 8) -> list[DoubanSubject]:
+        subjects = self.search_subjects_suggest(book, limit=limit)
+        if subjects:
+            return subjects
+
+        subjects = self.search_subjects_json(book, limit=limit)
+        if subjects:
+            return subjects
+
         urls = [
+            f"https://search.douban.com/book/subject_search?search_text={quote_plus(book)}&cat=1001&start=0",
             f"{DOUBAN_HOST}/subject_search?search_text={quote_plus(book)}&cat=1001",
             f"https://www.douban.com/search?cat=1001&q={quote_plus(book)}",
         ]
-        subjects: list[DoubanSubject] = []
+        subjects = []
         seen: set[str] = set()
         for url in urls:
             html = self.get_text(url)
@@ -146,6 +174,47 @@ class DoubanBookReviewCrawler:
                 subjects.append(subject)
                 if len(subjects) >= limit:
                     return subjects
+        return subjects
+
+    def search_subjects_suggest(self, book: str, limit: int = 8) -> list[DoubanSubject]:
+        url = f"{DOUBAN_HOST}/j/subject_suggest?q={quote_plus(book)}"
+        try:
+            payload = self.get_json_any(url, referer=f"{DOUBAN_HOST}/")
+        except RuntimeError as exc:
+            print(f"[warn] Douban subject_suggest failed, falling back to other search methods: {exc}")
+            return []
+        if not isinstance(payload, list):
+            return []
+        subjects: list[DoubanSubject] = []
+        seen: set[str] = set()
+        for item in payload:
+            subject = parse_subject_from_suggest_item(item, base_url=url)
+            if not subject or subject.subject_id in seen:
+                continue
+            seen.add(subject.subject_id)
+            subjects.append(subject)
+            if len(subjects) >= limit:
+                break
+        return subjects
+
+    def search_subjects_json(self, book: str, limit: int = 8) -> list[DoubanSubject]:
+        url = f"https://www.douban.com/j/search?q={quote_plus(book)}&cat=1001"
+        try:
+            payload = self.get_json_object(url, referer=f"https://www.douban.com/search?cat=1001&q={quote_plus(book)}")
+        except RuntimeError as exc:
+            print(f"[warn] Douban JSON search failed, falling back to HTML search: {exc}")
+            return []
+        items = payload.get("items", []) if isinstance(payload, dict) else []
+        subjects: list[DoubanSubject] = []
+        seen: set[str] = set()
+        for item in items:
+            subject = parse_subject_from_json_item(item, base_url=url)
+            if not subject or subject.subject_id in seen:
+                continue
+            seen.add(subject.subject_id)
+            subjects.append(subject)
+            if len(subjects) >= limit:
+                break
         return subjects
 
     def parse_review_list(
@@ -232,6 +301,37 @@ class DoubanBookReviewCrawler:
                     sleep(1.5 * (attempt + 1))
         raise RuntimeError(f"Failed to fetch {url}: {last_error}") from last_error
 
+    def get_json_object(self, url: str, referer: str = "") -> dict[str, Any]:
+        payload = self.get_json_any(url, referer=referer)
+        if not isinstance(payload, dict):
+            raise RuntimeError("Douban JSON search did not return an object")
+        return payload
+
+    def get_json_any(self, url: str, referer: str = "") -> Any:
+        headers = {
+            "Referer": referer or DOUBAN_HOST + "/",
+            "Accept": "application/json, text/javascript, */*; q=0.01",
+            "X-Requested-With": "XMLHttpRequest",
+        }
+        last_error: Exception | None = None
+        for attempt in range(self.retries + 1):
+            if self.delay:
+                sleep(uniform(self.delay * 0.7, self.delay * 1.3))
+            try:
+                response = self.session.get(url, headers=headers, timeout=self.timeout)
+                if response.status_code in {403, 418, 429}:
+                    raise RuntimeError(f"Douban blocked request with HTTP {response.status_code}: {url}")
+                response.raise_for_status()
+                response.encoding = response.apparent_encoding or response.encoding
+                detect_blocked_text(response.text, url)
+                payload = response.json()
+                return payload
+            except (requests.RequestException, RuntimeError, ValueError) as exc:
+                last_error = exc
+                if attempt < self.retries:
+                    sleep(1.5 * (attempt + 1))
+        raise RuntimeError(f"Failed to fetch JSON {url}: {last_error}") from last_error
+
 
 def build_reviews_url(subject_id: str, start: int = 0, sort: str = "hotest") -> str:
     sort = sort or "hotest"
@@ -255,6 +355,87 @@ def parse_subject_candidates(soup: BeautifulSoup, base_url: str) -> list[DoubanS
             title = summary[:40]
         candidates.append(DoubanSubject(subject_id=subject_id, title=title or subject_id, url=href, summary=summary))
     return dedupe_subjects(candidates)
+
+
+def parse_subject_from_json_item(item: Any, base_url: str) -> DoubanSubject | None:
+    if isinstance(item, str):
+        return parse_subject_from_json_html(item, base_url)
+    if not isinstance(item, dict):
+        return None
+    url = normalize_douban_url(str(item.get("url") or ""), base_url)
+    subject_id = extract_subject_id(url)
+    raw_id = str(item.get("id") or "")
+    if not subject_id and raw_id.isdigit():
+        subject_id = raw_id
+    if not subject_id:
+        subject_id = extract_subject_id(str(item.get("moreurl") or ""))
+    if not subject_id:
+        return None
+    if not url:
+        url = f"{DOUBAN_HOST}/subject/{subject_id}/"
+    title = strip_html(str(item.get("title") or item.get("name") or subject_id))
+    summary_parts = [
+        strip_html(str(item.get("abstract") or "")),
+        strip_html(str(item.get("abstract_2") or "")),
+        strip_html(str(item.get("extra") or "")),
+    ]
+    summary = clean_text(" ".join(part for part in summary_parts if part))
+    return DoubanSubject(subject_id=subject_id, title=clean_text(title), url=url, summary=summary)
+
+
+def parse_subject_from_suggest_item(item: Any, base_url: str) -> DoubanSubject | None:
+    if not isinstance(item, dict):
+        return None
+    url = normalize_douban_url(str(item.get("url") or ""), base_url)
+    subject_id = extract_subject_id(url)
+    raw_id = str(item.get("id") or "")
+    if not subject_id and raw_id.isdigit():
+        subject_id = raw_id
+    if not subject_id:
+        return None
+    if not url:
+        url = f"{DOUBAN_HOST}/subject/{subject_id}/"
+    title = clean_text(
+        " ".join(
+            part
+            for part in [
+                strip_html(str(item.get("title") or "")),
+                strip_html(str(item.get("subtitle") or item.get("sub_title") or "")),
+            ]
+            if part
+        )
+    )
+    summary = clean_text(
+        " ".join(
+            part
+            for part in [
+                strip_html(str(item.get("author_name") or "")),
+                strip_html(str(item.get("year") or "")),
+                strip_html(str(item.get("type") or "")),
+            ]
+            if part
+        )
+    )
+    return DoubanSubject(subject_id=subject_id, title=title or subject_id, url=url, summary=summary)
+
+
+def parse_subject_from_json_html(item_html: str, base_url: str) -> DoubanSubject | None:
+    soup = BeautifulSoup(item_html, "html.parser")
+    raw = str(item_html)
+    anchor = soup.select_one('a[href*="/subject/"]') or soup.find("a")
+    href = anchor.get("href", "") if isinstance(anchor, Tag) else ""
+    url = normalize_douban_url(href, base_url)
+    subject_id = extract_subject_id(url) or extract_subject_hint_id(raw)
+    if not subject_id:
+        return None
+    if not url or "/subject/" not in url:
+        url = f"{DOUBAN_HOST}/subject/{subject_id}/"
+    title_node = soup.select_one(".title, h3, h2, a")
+    title = clean_text(title_node.get_text(" ", strip=True) if title_node else "")
+    summary = clean_text(soup.get_text(" ", strip=True))
+    if not title:
+        title = summary[:40] or subject_id
+    return DoubanSubject(subject_id=subject_id, title=title, url=url, summary=summary)
 
 
 def parse_review_list_item(item: Tag, book: str, subject: DoubanSubject, list_url: str) -> Review | None:
@@ -336,6 +517,11 @@ def extract_subject_id(url: str) -> str:
     return match.group(1) if match else ""
 
 
+def extract_subject_hint_id(text: str) -> str:
+    match = SUBJECT_HINT_RE.search(text)
+    return match.group(1) if match else ""
+
+
 def extract_review_id(url: str) -> str:
     match = REVIEW_RE.search(url)
     return match.group(1) if match else ""
@@ -386,6 +572,12 @@ def clean_review_content(text: str) -> str:
     return normalize_space(text)
 
 
+def strip_html(text: str) -> str:
+    if "<" not in text and ">" not in text:
+        return clean_text(text)
+    return clean_text(BeautifulSoup(text, "html.parser").get_text(" ", strip=True))
+
+
 def clean_text(text: str) -> str:
     return normalize_space(text.replace("\xa0", " "))
 
@@ -399,6 +591,69 @@ def dedupe_subjects(subjects: Iterable[DoubanSubject]) -> list[DoubanSubject]:
         seen.add(subject.subject_id)
         unique.append(subject)
     return unique
+
+
+def load_subject_from_cache(book: str, cache_path: Path = DEFAULT_SUBJECT_CACHE) -> DoubanSubject | None:
+    if not book or not cache_path.exists():
+        return None
+    try:
+        data = json.loads(cache_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    record = data.get(book)
+    if not isinstance(record, dict):
+        return None
+    subject_id = str(record.get("subject_id") or "")
+    if not subject_id:
+        return None
+    return DoubanSubject(
+        subject_id=subject_id,
+        title=str(record.get("title") or book),
+        url=str(record.get("url") or f"{DOUBAN_HOST}/subject/{subject_id}/"),
+        summary=str(record.get("summary") or ""),
+    )
+
+
+def save_subject_cache(subject: DoubanSubject, book: str, cache_path: Path = DEFAULT_SUBJECT_CACHE) -> None:
+    if not book or not subject.subject_id:
+        return
+    try:
+        data = json.loads(cache_path.read_text(encoding="utf-8")) if cache_path.exists() else {}
+    except (OSError, json.JSONDecodeError):
+        data = {}
+    data[book] = {
+        "subject_id": subject.subject_id,
+        "title": subject.title or book,
+        "url": subject.url or f"{DOUBAN_HOST}/subject/{subject.subject_id}/",
+        "summary": subject.summary,
+    }
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    cache_path.write_text(json.dumps(data, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+
+
+def load_subject_from_existing_reviews(book: str, path: Path = Path("data/raw_reviews.jsonl")) -> DoubanSubject | None:
+    if not book or not path.exists():
+        return None
+    try:
+        reviews = read_jsonl(path, fallback_book=book)
+    except ValueError:
+        return None
+    for review in reviews:
+        if review.platform != "douban":
+            continue
+        if review.book and book not in review.book and review.book not in book:
+            continue
+        subject_id = str(review.extra.get("douban_subject_id") or "")
+        if not subject_id:
+            subject_id = extract_subject_id(review.source_url)
+        if not subject_id:
+            continue
+        return DoubanSubject(
+            subject_id=subject_id,
+            title=review.book or book,
+            url=f"{DOUBAN_HOST}/subject/{subject_id}/",
+        )
+    return None
 
 
 def detect_blocked_page(soup: BeautifulSoup, url: str) -> None:

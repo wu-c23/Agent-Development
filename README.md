@@ -28,6 +28,14 @@ python scripts/collect_douban_reviews.py --book "诡秘之主" --subject-url "ht
 python scripts/collect_douban_reviews.py --book "诡秘之主" --pages 1
 ```
 
+先只检查自动搜索能找到哪些豆瓣条目：
+
+```powershell
+python scripts/collect_douban_reviews.py --book "诡秘之主" --search-only
+```
+
+成功抓取过一次后，脚本会把书名和 subject id 写入 `data/douban_subject_cache.json`；之后即使豆瓣搜索接口被 403，也可以直接按书名复用缓存。
+
 豆瓣有反爬和登录态限制。如果遇到安全验证、403 或搜不到条目，可以设置自己的合法 Cookie：
 
 ```powershell
