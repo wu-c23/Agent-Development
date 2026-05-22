@@ -68,7 +68,7 @@ python scripts/build_dashboard.py --report outputs/analysis_report.json --output
 
 ```powershell
 EASYCOMPUTE_API_KEY=你的 key
-EASYCOMPUTE_BASE_URL=https://easycompute.cs.tsinghua.edu.cn/v1
+EASYCOMPUTE_BASE_URL=https://llmapi.paratera.com/v1
 EASYCOMPUTE_MODEL=DeepSeek-V4-Pro
 ```
 
@@ -79,6 +79,14 @@ EASYCOMPUTE_MODEL=DeepSeek-V4-Pro
 ```powershell
 python scripts/analyze_reviews.py --input data/raw_reviews.jsonl --output outputs/analysis_report.json
 ```
+
+如果你想确认一定调用了模型，而不是回退本地启发式规则，加 `--require-agent`：
+
+```powershell
+python scripts/run_sentiment_pipeline.py --book "诡秘之主" --platform douban --max-pages 2 --require-agent
+```
+
+分析阶段会打印当前使用的 key 来源、base URL、模型名、最终 endpoint，以及每个 batch 是由 Agent 还是 heuristic 处理。
 
 一键流程：
 

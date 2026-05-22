@@ -9,24 +9,65 @@ import json
 import os
 
 
+ENV_SOURCES: dict[str, str] = {}
+CONFIG_KEYS = ("EASYCOMPUTE_API_KEY", "EASYCOMPUTE_BASE_URL", "EASYCOMPUTE_MODEL", "EASYCOMPUTE_TIMEOUT")
+PLACEHOLDER_VALUES = {"", "your_key_here", "你的 key", "your-api-key", "your_api_key"}
+
+
 @dataclass
 class AgentClientConfig:
     api_key: str = ""
     base_url: str = ""
     model: str = ""
     timeout: int = 90
+    sources: dict[str, str] | None = None
 
     @classmethod
     def from_env(cls) -> "AgentClientConfig":
-        load_env_file()
+        load_env_files()
         return cls(
             api_key=os.getenv("EASYCOMPUTE_API_KEY") or os.getenv("OPENAI_API_KEY", ""),
             base_url=os.getenv("EASYCOMPUTE_BASE_URL")
             or os.getenv("OPENAI_BASE_URL")
-            or "https://easycompute.cs.tsinghua.edu.cn/v1",
+            or "https://llmapi.paratera.com/v1",
             model=os.getenv("EASYCOMPUTE_MODEL") or os.getenv("OPENAI_MODEL") or "DeepSeek-V4-Pro",
             timeout=int(os.getenv("EASYCOMPUTE_TIMEOUT", "90")),
+            sources=dict(ENV_SOURCES),
         )
+
+    @property
+    def endpoint(self) -> str:
+        return chat_completions_endpoint(self.base_url)
+
+    @property
+    def masked_api_key(self) -> str:
+        if is_placeholder_value(self.api_key):
+            return "<missing or placeholder>"
+        if len(self.api_key) <= 8:
+            return "***"
+        return f"{self.api_key[:4]}...{self.api_key[-4:]}"
+
+    def validation_errors(self) -> list[str]:
+        errors: list[str] = []
+        if is_placeholder_value(self.api_key):
+            errors.append("EASYCOMPUTE_API_KEY is missing or still a placeholder")
+        if not self.base_url:
+            errors.append("EASYCOMPUTE_BASE_URL is missing")
+        if not self.model:
+            errors.append("EASYCOMPUTE_MODEL is missing")
+        return errors
+
+    def diagnostic_lines(self) -> list[str]:
+        sources = self.sources or {}
+        key_source = sources.get("EASYCOMPUTE_API_KEY", env_source_label("EASYCOMPUTE_API_KEY"))
+        base_source = sources.get("EASYCOMPUTE_BASE_URL", env_source_label("EASYCOMPUTE_BASE_URL"))
+        model_source = sources.get("EASYCOMPUTE_MODEL", env_source_label("EASYCOMPUTE_MODEL"))
+        return [
+            f"config EASYCOMPUTE_API_KEY={self.masked_api_key} ({key_source})",
+            f"config EASYCOMPUTE_BASE_URL={self.base_url} ({base_source})",
+            f"config EASYCOMPUTE_MODEL={self.model} ({model_source})",
+            f"config endpoint={self.endpoint}",
+        ]
 
 
 class AgentClient:
@@ -42,11 +83,14 @@ class AgentClient:
 
     @property
     def available(self) -> bool:
-        return bool(self.config.api_key and self.config.base_url and self.config.model)
+        return not self.config.validation_errors()
 
     def chat_json(self, system_prompt: str, user_prompt: str, temperature: float = 0.2) -> dict[str, Any]:
         if not self.available:
-            raise RuntimeError("Agent client is missing EASYCOMPUTE_API_KEY/base_url/model.")
+            raise RuntimeError(
+                "Agent client is missing EASYCOMPUTE_API_KEY/base_url/model. "
+                "Fill .env with EASYCOMPUTE_API_KEY, EASYCOMPUTE_BASE_URL, and EASYCOMPUTE_MODEL."
+            )
         payload = {
             "model": self.config.model,
             "messages": [
@@ -80,7 +124,14 @@ class AgentClient:
                 return json.loads(response.read().decode("utf-8"))
         except HTTPError as exc:
             detail = exc.read().decode("utf-8", errors="ignore")
-            raise RuntimeError(f"Agent HTTP {exc.code}: {detail}") from exc
+            hint = ""
+            if exc.code == 404:
+                hint = (
+                    f" Endpoint not found: {endpoint}. "
+                    "Check EASYCOMPUTE_BASE_URL in .env; it should be the OpenAI-compatible /v1 base URL "
+                    "or the full /chat/completions URL from the course page."
+                )
+            raise RuntimeError(f"Agent HTTP {exc.code}:{hint} {detail}") from exc
         except URLError as exc:
             raise RuntimeError(f"Agent request failed: {exc}") from exc
         except (KeyError, json.JSONDecodeError) as exc:
@@ -94,21 +145,52 @@ def chat_completions_endpoint(base_url: str) -> str:
     return f"{base}/chat/completions"
 
 
+def load_env_files(paths: tuple[str, ...] = (".env", ".env.example")) -> None:
+    for path in paths:
+        load_env_file(path)
+
+
 def load_env_file(path: str | Path = ".env") -> None:
     target = Path(path)
     if not target.is_absolute():
         target = repo_root() / target
     if not target.exists():
         return
-    for raw_line in target.read_text(encoding="utf-8").splitlines():
+    parsed = parse_env_file(target)
+    for key, value in parsed.items():
+        existing = os.environ.get(key)
+        existing_source = ENV_SOURCES.get(key, env_source_label(key) if existing is not None else "")
+        if should_set_env_value(key, existing, existing_source, value):
+            os.environ[key] = value
+            ENV_SOURCES[key] = str(target)
+
+
+def parse_env_file(path: Path) -> dict[str, str]:
+    parsed: dict[str, str] = {}
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
         line = raw_line.strip()
         if not line or line.startswith("#") or "=" not in line:
             continue
         key, value = line.split("=", 1)
         key = key.strip()
         value = strip_env_value(value.strip())
-        if key and key not in os.environ:
-            os.environ[key] = value
+        if key:
+            parsed[key] = value
+    return parsed
+
+
+def should_set_env_value(key: str, existing: str | None, existing_source: str, new_value: str) -> bool:
+    if key not in CONFIG_KEYS:
+        return existing is None
+    if existing is None:
+        return True
+    if is_placeholder_value(existing) and not is_placeholder_value(new_value):
+        return existing_source.endswith(".env") or existing_source == "environment"
+    return False
+
+
+def is_placeholder_value(value: str | None) -> bool:
+    return (value or "").strip() in PLACEHOLDER_VALUES
 
 
 def strip_env_value(value: str) -> str:
@@ -119,6 +201,10 @@ def strip_env_value(value: str) -> str:
 
 def repo_root() -> Path:
     return Path(__file__).resolve().parents[1]
+
+
+def env_source_label(key: str) -> str:
+    return "environment" if key in os.environ else "default"
 
 
 def extract_json_object(text: str) -> dict[str, Any]:

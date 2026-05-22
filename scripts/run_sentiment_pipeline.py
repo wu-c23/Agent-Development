@@ -32,6 +32,7 @@ def main() -> None:
     parser.add_argument("--limit", type=int, default=100)
     parser.add_argument("--batch-size", type=int, default=6)
     parser.add_argument("--no-agent", action="store_true", help="不调用模型，使用本地启发式规则")
+    parser.add_argument("--require-agent", action="store_true", help="如果 Agent 不可用或调用失败，直接报错，不回退启发式规则")
     parser.add_argument("--strict", action="store_true", help="抓取失败时立即退出；默认会跳过失败页面")
     parser.add_argument("--allow-empty-output", action="store_true", help="允许用空结果覆盖输出文件并继续生成空报告")
     args = parser.parse_args()
@@ -69,7 +70,12 @@ def main() -> None:
         return
     write_jsonl(args.raw_output, reviews)
 
-    report = analyze_reviews(reviews, use_agent=not args.no_agent, batch_size=args.batch_size)
+    report = analyze_reviews(
+        reviews,
+        use_agent=not args.no_agent,
+        batch_size=args.batch_size,
+        require_agent=args.require_agent,
+    )
     write_json(args.report_output, report)
 
     dashboard = render_dashboard(report, args.dashboard_output)

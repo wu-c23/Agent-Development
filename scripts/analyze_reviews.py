@@ -18,10 +18,16 @@ def main() -> None:
     parser.add_argument("--book", default="", help="当输入数据缺少 book 字段时使用")
     parser.add_argument("--batch-size", type=int, default=6, help="每次发给 Agent 的评论数")
     parser.add_argument("--no-agent", action="store_true", help="不调用模型，使用本地启发式规则兜底")
+    parser.add_argument("--require-agent", action="store_true", help="如果 Agent 不可用或调用失败，直接报错，不回退启发式规则")
     args = parser.parse_args()
 
     reviews = read_jsonl(args.input, fallback_book=args.book)
-    report = analyze_reviews(reviews, use_agent=not args.no_agent, batch_size=args.batch_size)
+    report = analyze_reviews(
+        reviews,
+        use_agent=not args.no_agent,
+        batch_size=args.batch_size,
+        require_agent=args.require_agent,
+    )
     write_json(args.output, report)
     print(f"Analyzed {len(reviews)} reviews -> {args.output}")
 

@@ -85,18 +85,63 @@ def analyze_reviews(
     use_agent: bool = True,
     batch_size: int = 6,
     client: AgentClient | None = None,
+    require_agent: bool = False,
 ) -> dict[str, Any]:
     client = client or AgentClient()
     analyses: list[ReviewAnalysis] = []
-    for batch in chunked(reviews, batch_size):
+    batches = chunked(reviews, batch_size)
+    agent_batches = 0
+    heuristic_batches = 0
+
+    print(f"[analysis] reviews={len(reviews)} batch_size={batch_size} batches={len(batches)}")
+    if use_agent:
+        for line in client.config.diagnostic_lines():
+            print(f"[analysis] {line}")
+        errors = client.config.validation_errors()
+        if errors:
+            print(f"[analysis] method=heuristic reason={'; '.join(errors)}")
+            if require_agent:
+                raise RuntimeError(f"Agent is required but unavailable: {'; '.join(errors)}")
+        else:
+            print(f"[analysis] method=agent model={client.config.model}")
+    else:
+        print("[analysis] method=heuristic reason=--no-agent was set")
+        if require_agent:
+            raise RuntimeError("Agent is required but --no-agent was set.")
+
+    for batch_index, batch in enumerate(batches, 1):
         if use_agent and client.available:
             try:
                 analyses.extend(analyze_batch_with_agent(batch, client))
+                agent_batches += 1
+                print(f"[analysis] batch {batch_index}/{len(batches)} analyzed by agent")
                 continue
             except Exception as exc:
-                print(f"[warn] Agent analysis failed, using heuristic fallback: {exc}")
+                print(f"[warn] batch {batch_index}/{len(batches)} agent failed; using heuristic fallback: {exc}")
+                if require_agent:
+                    raise RuntimeError(f"Agent is required but batch {batch_index} failed: {exc}") from exc
+        heuristic_batches += 1
+        print(f"[analysis] batch {batch_index}/{len(batches)} analyzed by heuristic")
         analyses.extend(heuristic_analysis(review) for review in batch)
-    return build_report(reviews, analyses, agent_used=use_agent and client.available)
+
+    if agent_batches and heuristic_batches:
+        method = "mixed"
+    elif agent_batches:
+        method = "agent"
+    else:
+        method = "heuristic"
+    print(
+        f"[analysis] completed method={method} "
+        f"agent_batches={agent_batches} heuristic_batches={heuristic_batches}"
+    )
+    return build_report(
+        reviews,
+        analyses,
+        agent_used=agent_batches > 0,
+        analysis_method=method,
+        agent_batches=agent_batches,
+        heuristic_batches=heuristic_batches,
+    )
 
 
 def analyze_batch_with_agent(batch: list[Review], client: AgentClient) -> list[ReviewAnalysis]:
@@ -220,7 +265,14 @@ def make_evidence(text: str, tags: list[str]) -> str:
     return normalize_space(text[:35])
 
 
-def build_report(reviews: list[Review], analyses: list[ReviewAnalysis], agent_used: bool) -> dict[str, Any]:
+def build_report(
+    reviews: list[Review],
+    analyses: list[ReviewAnalysis],
+    agent_used: bool,
+    analysis_method: str = "",
+    agent_batches: int = 0,
+    heuristic_batches: int = 0,
+) -> dict[str, Any]:
     counts = Counter(item.sentiment for item in analyses)
     total = max(len(analyses), 1)
     platform_counts: dict[str, Counter[str]] = defaultdict(Counter)
@@ -239,6 +291,9 @@ def build_report(reviews: list[Review], analyses: list[ReviewAnalysis], agent_us
         "book": book,
         "review_count": len(analyses),
         "agent_used": agent_used,
+        "analysis_method": analysis_method or ("agent" if agent_used else "heuristic"),
+        "agent_batches": agent_batches,
+        "heuristic_batches": heuristic_batches,
         "ratio": {
             "positive": round(counts["positive"] / total, 4),
             "neutral": round(counts["neutral"] / total, 4),
