@@ -3,4 +3,3 @@ __pycache__/
 *.pyc
 outputs/
 data/douban_subject_cache.json
-.env.example

@@ -7,10 +7,18 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 import json
 import os
+import socket
+import time
 
 
 ENV_SOURCES: dict[str, str] = {}
-CONFIG_KEYS = ("EASYCOMPUTE_API_KEY", "EASYCOMPUTE_BASE_URL", "EASYCOMPUTE_MODEL", "EASYCOMPUTE_TIMEOUT")
+CONFIG_KEYS = (
+    "EASYCOMPUTE_API_KEY",
+    "EASYCOMPUTE_BASE_URL",
+    "EASYCOMPUTE_MODEL",
+    "EASYCOMPUTE_TIMEOUT",
+    "EASYCOMPUTE_RETRIES",
+)
 PLACEHOLDER_VALUES = {"", "your_key_here", "你的 key", "your-api-key", "your_api_key"}
 
 
@@ -19,7 +27,8 @@ class AgentClientConfig:
     api_key: str = ""
     base_url: str = ""
     model: str = ""
-    timeout: int = 90
+    timeout: int = 180
+    retries: int = 2
     sources: dict[str, str] | None = None
 
     @classmethod
@@ -31,7 +40,8 @@ class AgentClientConfig:
             or os.getenv("OPENAI_BASE_URL")
             or "https://llmapi.paratera.com/v1",
             model=os.getenv("EASYCOMPUTE_MODEL") or os.getenv("OPENAI_MODEL") or "DeepSeek-V4-Pro",
-            timeout=int(os.getenv("EASYCOMPUTE_TIMEOUT", "90")),
+            timeout=int(os.getenv("EASYCOMPUTE_TIMEOUT", "180")),
+            retries=int(os.getenv("EASYCOMPUTE_RETRIES", "2")),
             sources=dict(ENV_SOURCES),
         )
 
@@ -62,10 +72,14 @@ class AgentClientConfig:
         key_source = sources.get("EASYCOMPUTE_API_KEY", env_source_label("EASYCOMPUTE_API_KEY"))
         base_source = sources.get("EASYCOMPUTE_BASE_URL", env_source_label("EASYCOMPUTE_BASE_URL"))
         model_source = sources.get("EASYCOMPUTE_MODEL", env_source_label("EASYCOMPUTE_MODEL"))
+        timeout_source = sources.get("EASYCOMPUTE_TIMEOUT", env_source_label("EASYCOMPUTE_TIMEOUT"))
+        retries_source = sources.get("EASYCOMPUTE_RETRIES", env_source_label("EASYCOMPUTE_RETRIES"))
         return [
             f"config EASYCOMPUTE_API_KEY={self.masked_api_key} ({key_source})",
             f"config EASYCOMPUTE_BASE_URL={self.base_url} ({base_source})",
             f"config EASYCOMPUTE_MODEL={self.model} ({model_source})",
+            f"config EASYCOMPUTE_TIMEOUT={self.timeout} ({timeout_source})",
+            f"config EASYCOMPUTE_RETRIES={self.retries} ({retries_source})",
             f"config endpoint={self.endpoint}",
         ]
 
@@ -119,23 +133,44 @@ class AgentClient:
             "X-API-Key": self.config.api_key,
         }
         request = Request(endpoint, data=body, headers=headers, method="POST")
-        try:
-            with urlopen(request, timeout=self.config.timeout) as response:
-                return json.loads(response.read().decode("utf-8"))
-        except HTTPError as exc:
-            detail = exc.read().decode("utf-8", errors="ignore")
-            hint = ""
-            if exc.code == 404:
-                hint = (
-                    f" Endpoint not found: {endpoint}. "
-                    "Check EASYCOMPUTE_BASE_URL in .env; it should be the OpenAI-compatible /v1 base URL "
-                    "or the full /chat/completions URL from the course page."
-                )
-            raise RuntimeError(f"Agent HTTP {exc.code}:{hint} {detail}") from exc
-        except URLError as exc:
-            raise RuntimeError(f"Agent request failed: {exc}") from exc
-        except (KeyError, json.JSONDecodeError) as exc:
-            raise RuntimeError("Agent response is not an OpenAI-compatible JSON payload.") from exc
+        last_error: Exception | None = None
+        for attempt in range(self.config.retries + 1):
+            try:
+                with urlopen(request, timeout=self.config.timeout) as response:
+                    return json.loads(response.read().decode("utf-8"))
+            except HTTPError as exc:
+                detail = exc.read().decode("utf-8", errors="ignore")
+                if exc.code in {429, 500, 502, 503, 504} and attempt < self.config.retries:
+                    wait_seconds = retry_after_seconds(exc, attempt)
+                    print(
+                        f"[agent] HTTP {exc.code}; retry "
+                        f"{attempt + 1}/{self.config.retries} after {wait_seconds:.1f}s"
+                    )
+                    time.sleep(wait_seconds)
+                    last_error = RuntimeError(f"Agent HTTP {exc.code}: {detail}")
+                    continue
+                hint = ""
+                if exc.code == 404:
+                    hint = (
+                        f" Endpoint not found: {endpoint}. "
+                        "Check EASYCOMPUTE_BASE_URL in .env; it should be the OpenAI-compatible /v1 base URL "
+                        "or the full /chat/completions URL from the course page."
+                    )
+                raise RuntimeError(f"Agent HTTP {exc.code}:{hint} {detail}") from exc
+            except (URLError, TimeoutError, socket.timeout) as exc:
+                last_error = exc
+                if attempt < self.config.retries:
+                    wait_seconds = retry_after_seconds(None, attempt)
+                    print(
+                        f"[agent] request failed ({exc}); retry "
+                        f"{attempt + 1}/{self.config.retries} after {wait_seconds:.1f}s"
+                    )
+                    time.sleep(wait_seconds)
+                    continue
+                raise RuntimeError(f"Agent request failed after retries: {exc}") from exc
+            except (KeyError, json.JSONDecodeError) as exc:
+                raise RuntimeError("Agent response is not an OpenAI-compatible JSON payload.") from exc
+        raise RuntimeError(f"Agent request failed after retries: {last_error}")
 
 
 def chat_completions_endpoint(base_url: str) -> str:
@@ -145,7 +180,7 @@ def chat_completions_endpoint(base_url: str) -> str:
     return f"{base}/chat/completions"
 
 
-def load_env_files(paths: tuple[str, ...] = (".env", ".env.example")) -> None:
+def load_env_files(paths: tuple[str, ...] = (".env",)) -> None:
     for path in paths:
         load_env_file(path)
 
@@ -205,6 +240,17 @@ def repo_root() -> Path:
 
 def env_source_label(key: str) -> str:
     return "environment" if key in os.environ else "default"
+
+
+def retry_after_seconds(exc: HTTPError | None, attempt: int) -> float:
+    if exc is not None:
+        value = exc.headers.get("Retry-After")
+        if value:
+            try:
+                return min(120.0, max(1.0, float(value)))
+            except ValueError:
+                pass
+    return min(120.0, 8.0 * (2**attempt))
 
 
 def extract_json_object(text: str) -> dict[str, Any]:

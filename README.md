@@ -70,6 +70,9 @@ python scripts/build_dashboard.py --report outputs/analysis_report.json --output
 EASYCOMPUTE_API_KEY=你的 key
 EASYCOMPUTE_BASE_URL=https://llmapi.paratera.com/v1
 EASYCOMPUTE_MODEL=DeepSeek-V4-Pro
+EASYCOMPUTE_TIMEOUT=180
+EASYCOMPUTE_RETRIES=2
+EASYCOMPUTE_BATCH_DELAY=8
 ```
 
 脚本会自动读取仓库根目录的 `.env`，不需要每次手动执行 `$env:...`。`.env` 已加入 `.gitignore`，避免误提交 key。
@@ -87,6 +90,12 @@ python scripts/run_sentiment_pipeline.py --book "诡秘之主" --platform douban
 ```
 
 分析阶段会打印当前使用的 key 来源、base URL、模型名、最终 endpoint，以及每个 batch 是由 Agent 还是 heuristic 处理。
+
+如果遇到 HTTP 429，表示模型服务端限流。可以降低并发压力：
+
+```powershell
+python scripts/run_sentiment_pipeline.py --book "诡秘之主" --platform douban --max-pages 2 --batch-size 3 --batch-delay 15 --require-agent
+```
 
 一键流程：
 

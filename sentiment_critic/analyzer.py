@@ -4,6 +4,8 @@ from collections import Counter, defaultdict
 from statistics import mean
 from typing import Any
 import json
+import os
+import time
 
 from .agent_client import AgentClient
 from .models import Review, ReviewAnalysis, coerce_score, coerce_sentiment, normalize_space
@@ -86,14 +88,20 @@ def analyze_reviews(
     batch_size: int = 6,
     client: AgentClient | None = None,
     require_agent: bool = False,
+    batch_delay: float | None = None,
 ) -> dict[str, Any]:
     client = client or AgentClient()
     analyses: list[ReviewAnalysis] = []
     batches = chunked(reviews, batch_size)
+    if batch_delay is None:
+        batch_delay = float(os.getenv("EASYCOMPUTE_BATCH_DELAY", "8"))
     agent_batches = 0
     heuristic_batches = 0
 
-    print(f"[analysis] reviews={len(reviews)} batch_size={batch_size} batches={len(batches)}")
+    print(
+        f"[analysis] reviews={len(reviews)} batch_size={batch_size} "
+        f"batches={len(batches)} batch_delay={batch_delay:g}s"
+    )
     if use_agent:
         for line in client.config.diagnostic_lines():
             print(f"[analysis] {line}")
@@ -112,9 +120,12 @@ def analyze_reviews(
     for batch_index, batch in enumerate(batches, 1):
         if use_agent and client.available:
             try:
-                analyses.extend(analyze_batch_with_agent(batch, client))
+                analyses.extend(analyze_batch_with_agent_resilient(batch, client, batch_index, len(batches)))
                 agent_batches += 1
                 print(f"[analysis] batch {batch_index}/{len(batches)} analyzed by agent")
+                if batch_delay > 0 and batch_index < len(batches):
+                    print(f"[analysis] sleeping {batch_delay:g}s to avoid rate limit")
+                    time.sleep(batch_delay)
                 continue
             except Exception as exc:
                 print(f"[warn] batch {batch_index}/{len(batches)} agent failed; using heuristic fallback: {exc}")
@@ -171,6 +182,33 @@ def analyze_batch_with_agent(batch: list[Review], client: AgentClient) -> list[R
         if review.review_id not in seen:
             analyses.append(heuristic_analysis(review))
     return analyses
+
+
+def analyze_batch_with_agent_resilient(
+    batch: list[Review],
+    client: AgentClient,
+    batch_index: int,
+    total_batches: int,
+) -> list[ReviewAnalysis]:
+    try:
+        return analyze_batch_with_agent(batch, client)
+    except Exception as exc:
+        if len(batch) <= 1 or not is_retryable_agent_error(exc):
+            raise
+        midpoint = len(batch) // 2
+        print(
+            f"[analysis] batch {batch_index}/{total_batches} failed with retryable error; "
+            f"splitting {len(batch)} reviews into {midpoint}+{len(batch) - midpoint}"
+        )
+        first = analyze_batch_with_agent_resilient(batch[:midpoint], client, batch_index, total_batches)
+        time.sleep(float(os.getenv("EASYCOMPUTE_BATCH_DELAY", "8")))
+        second = analyze_batch_with_agent_resilient(batch[midpoint:], client, batch_index, total_batches)
+        return first + second
+
+
+def is_retryable_agent_error(exc: Exception) -> bool:
+    text = str(exc).lower()
+    return any(marker in text for marker in ("429", "ratelimit", "rate limit", "timed out", "timeout", "503", "504"))
 
 
 def complete_analysis(data: dict[str, Any], review: Review) -> ReviewAnalysis:
