@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -17,12 +18,13 @@ class AgentClientConfig:
 
     @classmethod
     def from_env(cls) -> "AgentClientConfig":
+        load_env_file()
         return cls(
             api_key=os.getenv("EASYCOMPUTE_API_KEY") or os.getenv("OPENAI_API_KEY", ""),
             base_url=os.getenv("EASYCOMPUTE_BASE_URL")
             or os.getenv("OPENAI_BASE_URL")
             or "https://easycompute.cs.tsinghua.edu.cn/v1",
-            model=os.getenv("EASYCOMPUTE_MODEL") or os.getenv("OPENAI_MODEL") or "gpt-4o-mini",
+            model=os.getenv("EASYCOMPUTE_MODEL") or os.getenv("OPENAI_MODEL") or "DeepSeek-V4-Pro",
             timeout=int(os.getenv("EASYCOMPUTE_TIMEOUT", "90")),
         )
 
@@ -90,6 +92,33 @@ def chat_completions_endpoint(base_url: str) -> str:
     if base.endswith("/chat/completions"):
         return base
     return f"{base}/chat/completions"
+
+
+def load_env_file(path: str | Path = ".env") -> None:
+    target = Path(path)
+    if not target.is_absolute():
+        target = repo_root() / target
+    if not target.exists():
+        return
+    for raw_line in target.read_text(encoding="utf-8").splitlines():
+        line = raw_line.strip()
+        if not line or line.startswith("#") or "=" not in line:
+            continue
+        key, value = line.split("=", 1)
+        key = key.strip()
+        value = strip_env_value(value.strip())
+        if key and key not in os.environ:
+            os.environ[key] = value
+
+
+def strip_env_value(value: str) -> str:
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
+        return value[1:-1]
+    return value
+
+
+def repo_root() -> Path:
+    return Path(__file__).resolve().parents[1]
 
 
 def extract_json_object(text: str) -> dict[str, Any]:

@@ -64,12 +64,19 @@ python scripts/analyze_reviews.py --input data/raw_reviews.jsonl --output output
 python scripts/build_dashboard.py --report outputs/analysis_report.json --output outputs/sentiment_dashboard.html
 ```
 
-使用 EasyCompute Agent 时，按课程页面给出的调用信息设置环境变量：
+使用 EasyCompute Agent 时，把 `.env.example` 复制为 `.env`，然后在 `.env` 中填写 EasyCompute 配置：
 
 ```powershell
-$env:EASYCOMPUTE_API_KEY="你的 key"
-$env:EASYCOMPUTE_BASE_URL="https://easycompute.cs.tsinghua.edu.cn/v1"
-$env:EASYCOMPUTE_MODEL="页面上给出的模型名"
+EASYCOMPUTE_API_KEY=你的 key
+EASYCOMPUTE_BASE_URL=https://easycompute.cs.tsinghua.edu.cn/v1
+EASYCOMPUTE_MODEL=DeepSeek-V4-Pro
+```
+
+脚本会自动读取仓库根目录的 `.env`，不需要每次手动执行 `$env:...`。`.env` 已加入 `.gitignore`，避免误提交 key。
+
+配置完成后运行：
+
+```powershell
 python scripts/analyze_reviews.py --input data/raw_reviews.jsonl --output outputs/analysis_report.json
 ```
 
