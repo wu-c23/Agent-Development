@@ -1,13 +1,19 @@
 import json
+import sys
+from pathlib import Path
 from typing import Dict, List, Optional
+
+# Ensure src/ is importable regardless of how this module is loaded
+_src = Path(__file__).resolve().parents[1]
+if str(_src) not in sys.path:
+    sys.path.insert(0, str(_src))
 
 from openai import OpenAI
 
 from sentiment_critic.critic import score_risks
 from .config import API_KEY, CHAT_MODEL, DEEPSEEK_BASE_URL
-from .embedding import embed_texts
 from .models import Book
-from .vector_store import get_collection, upsert_books
+from .vector_store import BM25Index
 
 
 class SafeSearchEngine:
@@ -19,11 +25,10 @@ class SafeSearchEngine:
             api_key=API_KEY,
             base_url=DEEPSEEK_BASE_URL,
         )
-        self._collection = get_collection()
+        self._index = BM25Index()
 
     def index_books(self, books: List[Book]) -> None:
-        embeddings = embed_texts(self._client, [book.intro for book in books])
-        upsert_books(self._collection, books, embeddings)
+        self._index.build(books)
 
     def _extract_intent(self, query: str) -> Dict[str, object]:
         prompt = (
@@ -60,40 +65,17 @@ class SafeSearchEngine:
         top_k: int = 10,
     ) -> Dict[str, object]:
         avoid_tags = avoid_tags or []
-        query_embedding = embed_texts(self._client, [query])
-
-        raw = self._collection.query(
-            query_embeddings=query_embedding,
-            n_results=top_k,
-            include=["documents", "metadatas", "distances"],
-        )
-
-        candidates = []
-        for idx, book_id in enumerate(raw["ids"][0]):
-            metadata = raw["metadatas"][0][idx]
-            distance = raw["distances"][0][idx]
-            similarity = max(0.0, 1.0 - float(distance))
-            tags = [tag for tag in metadata.get("tags", "").split(",") if tag]
-
-            candidates.append(
-                Book(
-                    id=book_id,
-                    title=metadata.get("title", ""),
-                    intro=raw["documents"][0][idx],
-                    tags=tags,
-                    status=metadata.get("status") or None,
-                    sentiment_summary=metadata.get("sentiment_summary") or None,
-                )
-            )
+        ranked = self._index.query(query, top_k)
+        candidates = [book for book, _ in ranked]
 
         retrieval_candidates = [
             {
                 "id": book.id,
                 "title": book.title,
-                "similarity": similarity,
-                "matched_fields": ["intro", "tags"],
+                "similarity": score,
+                "matched_fields": ["title", "intro", "tags"],
             }
-            for book, similarity in zip(candidates, [max(0.0, 1.0 - float(d)) for d in raw["distances"][0]])
+            for book, score in ranked
         ]
 
         risk_scores = []

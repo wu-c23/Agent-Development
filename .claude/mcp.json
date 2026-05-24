@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "safe-search": {
+      "command": "python",
+      "args": ["-m", "src.safe_search.mcp_server"],
+      "cwd": "${workspaceFolder}",
+      "description": "网络小说智能搜索与避雷推荐 — 语义搜索 + 风险评分 + 自动过滤"
+    }
+  }
+}
