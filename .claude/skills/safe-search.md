@@ -3,6 +3,7 @@ name: safe-search
 description: 网络小说智能搜索与避雷推荐。输入自然语言描述找书，自动过滤烂尾、虐主、狗血等雷点。
 tools:
   - search_novels
+  - index_books
   - score_novel_risks
   - extract_search_intent
 ---
@@ -19,14 +20,18 @@ tools:
 - 想避开的标签和雷区
 - 情绪倾向和约束条件
 
-### 2. 搜索候选书籍
-使用 `search_novels` 执行完整搜索+避雷流程，输入：
-- `query`: 用户的自然语言查询
+### 2. 索引书籍（持久化）
+使用 `index_books` 将书籍添加到持久化向量索引（ChromaDB + BM25）：
 - `books`: 候选书列表（每本书需 id, title, intro, tags，可选 status, sentiment_summary）
+
+### 3. 搜索候选书籍
+使用 `search_novels` 执行完整搜索+避雷流程：
+- `query`: 用户的自然语言查询
+- `books`（可选）: 候选书列表。不传则使用已索引的持久化存储
 - `avoid_tags`: 用户想避开的标签，如 `["angst", "烂尾", "虐主", "后宫", "狗血"]`
 - `top_k`: 返回结果数
 
-### 3. 单本风险评估
+### 4. 单本风险评估
 使用 `score_novel_risks` 对任意书籍做风险体检，返回5维评分：
 - `abuse_protagonist` — 虐主程度
 - `unfinished` — 烂尾风险
@@ -39,7 +44,8 @@ tools:
 当用户说"帮我找类似XX的小说"或"推荐XX类型的小说"时：
 
 1. **提取意图**：调用 `extract_search_intent` 理解用户真正想要什么
-2. **搜书**：调用 `search_novels`，传入用户查询 + 候选书数据 + 避雷标签
+2. **索引书籍**（首次使用）：调用 `index_books` 将候选书加入持久化索引
+3. **搜书**：调用 `search_novels`，传入用户查询 + 避雷标签（books 参数可选）
 3. **解读结果**：
    - `filtered_results` — 推荐的书籍（已过滤雷点）
    - `blocked_results` — 被过滤的书及原因

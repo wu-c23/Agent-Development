@@ -2,31 +2,24 @@
 
 Provides:
   - search_novels: full semantic search + risk-avoidance pipeline
+  - index_books: add/update books in the persistent index
   - score_novel_risks: risk dimension scoring for a single novel
   - extract_search_intent: structured intent extraction from natural-language queries
 """
 
 from __future__ import annotations
 
-import json
-import os
-import sys
-from pathlib import Path
 from typing import Any
 
-# Ensure src/ is on sys.path so engine.py can do `from sentiment_critic.critic import ...`
-_src = Path(__file__).resolve().parents[1]
-if str(_src) not in sys.path:
-    sys.path.insert(0, str(_src))
-
-from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 
-from .config import API_KEY, CHAT_MODEL, DEEPSEEK_BASE_URL
+try:
+    from ..sentiment_critic.critic import score_risks
+except ImportError:
+    from sentiment_critic.critic import score_risks
+from .config import API_KEY, CHAT_MODEL
 from .engine import SafeSearchEngine
 from .models import Book
-
-load_dotenv()
 
 mcp = FastMCP(
     "SafeSearch",
@@ -47,40 +40,8 @@ def _get_engine() -> SafeSearchEngine:
     return _engine
 
 
-# ---------------------------------------------------------------------------
-# Tools
-# ---------------------------------------------------------------------------
-
-
-@mcp.tool()
-def search_novels(
-    query: str,
-    books: list[dict[str, Any]],
-    avoid_tags: list[str] | None = None,
-    top_k: int = 10,
-) -> dict[str, Any]:
-    """Search novels by natural language query with automatic risk avoidance.
-
-    Accepts a list of candidate books and returns: query intent analysis,
-    retrieval candidates ranked by relevance, risk scores for each candidate,
-    final filtered recommendations, blocked results with reasons, and data
-    quality gaps.
-
-    Parameters
-    ----------
-    query : str
-        Natural language query, e.g. "想看类似诡秘之主但主角不那么压抑的"
-    books : list[dict]
-        Candidate books. Each dict needs: id, title, intro, tags (list[str]).
-        Optional: status ("completed"/"ongoing"), sentiment_summary (str).
-    avoid_tags : list[str] | None
-        Tags the user wants to avoid, e.g. ["angst", "烂尾", "虐主"].
-    top_k : int
-        Number of top candidates to return (default 10).
-    """
-    engine = _get_engine()
-
-    book_objs = [
+def _dicts_to_books(books: list[dict[str, Any]]) -> list[Book]:
+    return [
         Book(
             id=b["id"],
             title=b["title"],
@@ -92,8 +53,63 @@ def search_novels(
         for b in books
     ]
 
+
+# ---------------------------------------------------------------------------
+# Tools
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+def index_books(books: list[dict[str, Any]]) -> dict[str, Any]:
+    """Add or update books in the persistent search index.
+
+    Books are upserted by id. After indexing, search_novels can be called
+    without the books parameter to search against the persistent store.
+
+    Parameters
+    ----------
+    books : list[dict]
+        Books to index. Each dict needs: id, title, intro, tags (list[str]).
+        Optional: status ("completed"/"ongoing"), sentiment_summary (str).
+    """
+    engine = _get_engine()
+    book_objs = _dicts_to_books(books)
     engine.index_books(book_objs)
-    return engine.search(query=query, avoid_tags=avoid_tags or [], top_k=top_k)
+    return {"indexed": len(book_objs), "total_in_index": engine.store.book_count()}
+
+
+@mcp.tool()
+def search_novels(
+    query: str,
+    books: list[dict[str, Any]] | None = None,
+    avoid_tags: list[str] | None = None,
+    top_k: int = 10,
+) -> dict[str, Any]:
+    """Search novels by natural language query with automatic risk avoidance.
+
+    If `books` is provided, they are indexed and searched on-the-fly (ad-hoc mode).
+    If `books` is None, the persistent index is used (requires prior index_books call).
+
+    Returns: query intent analysis, retrieval candidates ranked by relevance,
+    risk scores for each candidate, final filtered recommendations, blocked
+    results with reasons, and data quality gaps.
+
+    Parameters
+    ----------
+    query : str
+        Natural language query, e.g. "想看类似诡秘之主但主角不那么压抑的"
+    books : list[dict] | None
+        Candidate books for ad-hoc search. If None, uses persistent index.
+        Each dict needs: id, title, intro, tags (list[str]).
+        Optional: status ("completed"/"ongoing"), sentiment_summary (str).
+    avoid_tags : list[str] | None
+        Tags the user wants to avoid, e.g. ["angst", "烂尾", "虐主"].
+    top_k : int
+        Number of top candidates to return (default 10).
+    """
+    engine = _get_engine()
+    book_objs = _dicts_to_books(books) if books else None
+    return engine.search(query=query, avoid_tags=avoid_tags or [], top_k=top_k, books=book_objs)
 
 
 @mcp.tool()
@@ -114,8 +130,6 @@ def score_novel_risks(
 
     Returns scores and evidence for each flagged dimension.
     """
-    from sentiment_critic.critic import score_risks
-
     engine = _get_engine()
     return score_risks(
         client=engine._client,
@@ -135,7 +149,15 @@ def extract_search_intent(query: str) -> dict[str, Any]:
     Useful for understanding what a reader is really looking for before searching.
     """
     engine = _get_engine()
-    return engine._extract_intent(query)
+    intent = engine.extract_intent(query)
+    return {
+        "summary": intent.summary,
+        "topics": intent.topics,
+        "style": intent.style,
+        "protagonist_traits": intent.protagonist_traits,
+        "mood": intent.mood,
+        "constraints": intent.constraints,
+    }
 
 
 # ---------------------------------------------------------------------------
