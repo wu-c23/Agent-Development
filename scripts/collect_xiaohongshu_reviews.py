@@ -7,6 +7,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from sentiment_critic.artifacts import default_collect_output, unique_path
 from sentiment_critic.models import write_jsonl
 from sentiment_critic.xiaohongshu import collect_xiaohongshu_reviews
 
@@ -21,7 +22,8 @@ def main() -> None:
     parser.add_argument("--url", action="append", help="指定小红书搜索页、笔记页或 xhslink 分享 URL，可重复")
     parser.add_argument("--input-html", action="append", help="本地保存的小红书搜索页或笔记 HTML，可重复")
     parser.add_argument("--input-jsonl", default="", help="已有评论 JSONL，和本次采集合并")
-    parser.add_argument("--output", default="data/raw_reviews.jsonl", help="输出 JSONL 路径")
+    parser.add_argument("--output", default="", help="输出 JSONL 路径；不填时自动生成不覆盖的文件名")
+    parser.add_argument("--overwrite", action="store_true", help="允许覆盖显式指定的输出文件")
     parser.add_argument("--cookie", default="", help="小红书 Cookie；也可以使用 XHS_COOKIE 环境变量")
     parser.add_argument("--delay", type=float, default=2.0, help="请求间隔秒数")
     parser.add_argument("--timeout", type=int, default=20, help="请求超时秒数")
@@ -30,6 +32,7 @@ def main() -> None:
     parser.add_argument("--strict", action="store_true", help="抓取失败时直接抛出错误")
     parser.add_argument("--allow-empty-output", action="store_true", help="允许用空结果覆盖输出文件")
     args = parser.parse_args()
+    output = resolve_output(args)
 
     reviews = collect_xiaohongshu_reviews(
         book=args.book,
@@ -49,12 +52,19 @@ def main() -> None:
     )
     if not reviews and not args.allow_empty_output:
         print(
-            f"No Xiaohongshu reviews collected; {args.output} was not overwritten. "
+            f"No Xiaohongshu reviews collected; {output} was not overwritten. "
             "Use a real note/share URL, set XHS_COOKIE in .env, or use --input-html."
         )
         return
-    write_jsonl(args.output, reviews)
-    print(f"Collected {len(reviews)} Xiaohongshu reviews -> {args.output}")
+    write_jsonl(output, reviews)
+    print(f"Collected {len(reviews)} Xiaohongshu reviews -> {output}")
+
+
+def resolve_output(args: argparse.Namespace) -> Path:
+    if args.output:
+        path = Path(args.output)
+        return path if args.overwrite else unique_path(path)
+    return default_collect_output(args.book, ["xiaohongshu"])
 
 
 if __name__ == "__main__":

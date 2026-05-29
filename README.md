@@ -16,11 +16,17 @@ pip install -r requirements.txt
 python scripts/run_sentiment_pipeline.py --book "诡秘之主" --max-pages 2 --thread-pages 1 --no-agent
 ```
 
-输出文件：
+输出文件默认会进入带书名和时间戳的独立运行目录，避免覆盖旧结果：
 
-- `data/raw_reviews.jsonl`：豆瓣 + 贴吧原始书评。
-- `outputs/analysis_report.json`：结构化舆情分析结果。
-- `outputs/sentiment_dashboard.html`：HTML 舆情看板。
+- `outputs/runs/诡秘之主_douban_tieba_YYYYMMDD_HHMMSS/raw_reviews.jsonl`
+- `outputs/runs/诡秘之主_douban_tieba_YYYYMMDD_HHMMSS/analysis_report.json`
+- `outputs/runs/诡秘之主_douban_tieba_YYYYMMDD_HHMMSS/sentiment_dashboard.html`
+
+如果你想写到固定路径，可以显式传输出参数；默认不会覆盖已存在文件，会自动追加 `_2`、`_3`。只有加 `--overwrite` 才会覆盖：
+
+```powershell
+python scripts/run_sentiment_pipeline.py --book "诡秘之主" --raw-output data/raw_reviews.jsonl --report-output outputs/analysis_report.json --dashboard-output outputs/sentiment_dashboard.html --overwrite --no-agent
+```
 
 如果配置了 EasyCompute/OpenAI-compatible 模型，可以去掉 `--no-agent`：
 
@@ -91,7 +97,7 @@ python scripts/collect_tieba_reviews.py --book "诡秘之主" --input-html data/
 python scripts/collect_reviews.py --book "诡秘之主" --max-pages 2 --thread-pages 1
 ```
 
-不填 `--platform` 时默认抓 `douban + tieba`。也可以扩展到小红书：
+不填 `--output` 时会写到 `data/runs/书名_平台_时间戳.jsonl`。不填 `--platform` 时默认抓 `douban + tieba`。也可以扩展到小红书：
 
 ```powershell
 python scripts/collect_reviews.py --book "诡秘之主" --platform douban --platform tieba --platform xiaohongshu --max-pages 1

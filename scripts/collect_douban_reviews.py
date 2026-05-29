@@ -7,6 +7,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from sentiment_critic.artifacts import default_collect_output, unique_path
 from sentiment_critic.douban import DoubanBookReviewCrawler, collect_douban_reviews
 from sentiment_critic.douban import load_subject_from_cache, load_subject_from_existing_reviews
 from sentiment_critic.models import write_jsonl
@@ -23,7 +24,8 @@ def main() -> None:
     parser.add_argument("--min-chars", type=int, default=80, help="深度书评最小字数")
     parser.add_argument("--input-html", action="append", help="本地保存的豆瓣书评列表页或单篇书评 HTML")
     parser.add_argument("--input-jsonl", default="", help="已有 JSONL，和本次采集合并")
-    parser.add_argument("--output", default="data/raw_reviews.jsonl", help="输出 JSONL 路径")
+    parser.add_argument("--output", default="", help="输出 JSONL 路径；不填时自动生成不覆盖的文件名")
+    parser.add_argument("--overwrite", action="store_true", help="允许覆盖显式指定的输出文件")
     parser.add_argument("--cookie", default="", help="豆瓣 Cookie；也可以用 DOUBAN_COOKIE 环境变量")
     parser.add_argument("--delay", type=float, default=2.0, help="请求间隔秒数，避免过快")
     parser.add_argument("--timeout", type=int, default=20, help="请求超时秒数")
@@ -33,6 +35,7 @@ def main() -> None:
     parser.add_argument("--strict", action="store_true", help="抓取失败时直接抛出错误")
     parser.add_argument("--allow-empty-output", action="store_true", help="允许用空结果覆盖输出文件")
     args = parser.parse_args()
+    output = resolve_output(args)
 
     if args.search_only:
         cached = load_subject_from_cache(args.book) or load_subject_from_existing_reviews(args.book)
@@ -72,12 +75,19 @@ def main() -> None:
     )
     if not reviews and not args.allow_empty_output:
         print(
-            f"No Douban reviews collected; {args.output} was not overwritten. "
+            f"No Douban reviews collected; {output} was not overwritten. "
             "Try --subject-id/--subject-url, set DOUBAN_COOKIE, or use --input-html."
         )
         return
-    write_jsonl(args.output, reviews)
-    print(f"Collected {len(reviews)} Douban reviews -> {args.output}")
+    write_jsonl(output, reviews)
+    print(f"Collected {len(reviews)} Douban reviews -> {output}")
+
+
+def resolve_output(args: argparse.Namespace) -> Path:
+    if args.output:
+        path = Path(args.output)
+        return path if args.overwrite else unique_path(path)
+    return default_collect_output(args.book, ["douban"])
 
 
 if __name__ == "__main__":

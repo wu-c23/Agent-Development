@@ -7,6 +7,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from sentiment_critic.artifacts import default_collect_output, unique_path
 from sentiment_critic.models import write_jsonl
 from sentiment_critic.tieba import collect_tieba_reviews
 
@@ -22,7 +23,8 @@ def main() -> None:
     parser.add_argument("--url", action="append", help="指定贴吧搜索页或帖子 URL，可重复")
     parser.add_argument("--input-html", action="append", help="本地保存的贴吧搜索页或帖子 HTML，可重复")
     parser.add_argument("--input-jsonl", default="", help="已有评论 JSONL，和本次采集合并")
-    parser.add_argument("--output", default="data/raw_reviews.jsonl", help="输出 JSONL 路径")
+    parser.add_argument("--output", default="", help="输出 JSONL 路径；不填时自动生成不覆盖的文件名")
+    parser.add_argument("--overwrite", action="store_true", help="允许覆盖显式指定的输出文件")
     parser.add_argument("--cookie", default="", help="贴吧 Cookie；也可以使用 TIEBA_COOKIE 环境变量")
     parser.add_argument("--delay", type=float, default=2.0, help="请求间隔秒数")
     parser.add_argument("--timeout", type=int, default=20, help="请求超时秒数")
@@ -37,6 +39,7 @@ def main() -> None:
     parser.add_argument("--strict", action="store_true", help="抓取失败时直接抛出错误")
     parser.add_argument("--allow-empty-output", action="store_true", help="允许用空结果覆盖输出文件")
     args = parser.parse_args()
+    output = resolve_output(args)
 
     reviews = collect_tieba_reviews(
         book=args.book,
@@ -58,13 +61,20 @@ def main() -> None:
     )
     if not reviews and not args.allow_empty_output:
         print(
-            f"No Tieba reviews collected; {args.output} was not overwritten. "
+            f"No Tieba reviews collected; {output} was not overwritten. "
             "Automatic search tries Tieba full search, the same-name forum page, and the mobile forum page. "
             "If a real URL still returns 403, set TIEBA_COOKIE in .env or use --input-html."
         )
         return
-    write_jsonl(args.output, reviews)
-    print(f"Collected {len(reviews)} Tieba reviews -> {args.output}")
+    write_jsonl(output, reviews)
+    print(f"Collected {len(reviews)} Tieba reviews -> {output}")
+
+
+def resolve_output(args: argparse.Namespace) -> Path:
+    if args.output:
+        path = Path(args.output)
+        return path if args.overwrite else unique_path(path)
+    return default_collect_output(args.book, ["tieba"])
 
 
 if __name__ == "__main__":

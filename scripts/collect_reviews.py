@@ -7,6 +7,7 @@ import sys
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
+from sentiment_critic.artifacts import default_collect_output, unique_path
 from sentiment_critic.collectors import collect_reviews
 from sentiment_critic.douban import collect_douban_reviews
 from sentiment_critic.models import write_jsonl
@@ -36,7 +37,8 @@ def main() -> None:
     parser.add_argument("--url", action="append", help="指定评论页或搜索结果页 URL，可重复")
     parser.add_argument("--input-html", action="append", help="本地 HTML 文件，可重复")
     parser.add_argument("--input-jsonl", default="", help="已有评论 JSONL，字段可包含 book/platform/content/url")
-    parser.add_argument("--output", default="data/raw_reviews.jsonl", help="输出 JSONL 路径")
+    parser.add_argument("--output", default="", help="输出 JSONL 路径；不填时自动生成不覆盖的文件名")
+    parser.add_argument("--overwrite", action="store_true", help="允许覆盖显式指定的输出文件")
     parser.add_argument("--max-pages", type=int, default=1, help="每个平台搜索页数")
     parser.add_argument("--min-chars", type=int, default=80, help="深度评论最小字数")
     parser.add_argument("--limit", type=int, default=100, help="最多保留评论数")
@@ -48,6 +50,7 @@ def main() -> None:
     args = parser.parse_args()
 
     platforms = args.platform or ["douban", "tieba"]
+    output = resolve_output(args, platforms)
     if platforms == ["douban"] and not args.url:
         reviews = collect_douban_reviews(
             book=args.book,
@@ -88,12 +91,19 @@ def main() -> None:
         )
     if not reviews and not args.allow_empty_output:
         print(
-            f"No reviews collected; {args.output} was not overwritten. "
+            f"No reviews collected; {output} was not overwritten. "
             "Use --allow-empty-output if you really want an empty file."
         )
         return
-    write_jsonl(args.output, reviews)
-    print(f"Collected {len(reviews)} reviews -> {args.output}")
+    write_jsonl(output, reviews)
+    print(f"Collected {len(reviews)} reviews -> {output}")
+
+
+def resolve_output(args: argparse.Namespace, platforms: list[str]) -> Path:
+    if args.output:
+        path = Path(args.output)
+        return path if args.overwrite else unique_path(path)
+    return default_collect_output(args.book, platforms)
 
 
 if __name__ == "__main__":

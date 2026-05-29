@@ -8,6 +8,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from sentiment_critic.analyzer import analyze_reviews
+from sentiment_critic.artifacts import default_pipeline_outputs, unique_path
 from sentiment_critic.collectors import collect_reviews
 from sentiment_critic.douban import collect_douban_reviews
 from sentiment_critic.dashboard import render_dashboard
@@ -38,9 +39,10 @@ def main() -> None:
     parser.add_argument("--url", action="append", help="指定评论页或搜索结果页 URL，可重复")
     parser.add_argument("--input-html", action="append", help="本地 HTML 文件，可重复")
     parser.add_argument("--input", default="", help="已有评论 JSONL；提供后会和抓取结果合并")
-    parser.add_argument("--raw-output", default="data/raw_reviews.jsonl", help="采集结果 JSONL")
-    parser.add_argument("--report-output", default="outputs/analysis_report.json", help="分析报告 JSON")
-    parser.add_argument("--dashboard-output", default="outputs/sentiment_dashboard.html", help="看板 HTML")
+    parser.add_argument("--raw-output", default="", help="采集结果 JSONL；不填时自动生成不覆盖的运行目录")
+    parser.add_argument("--report-output", default="", help="分析报告 JSON；不填时自动生成不覆盖的运行目录")
+    parser.add_argument("--dashboard-output", default="", help="看板 HTML；不填时自动生成不覆盖的运行目录")
+    parser.add_argument("--overwrite", action="store_true", help="允许覆盖显式指定的输出文件")
     parser.add_argument("--max-pages", type=int, default=1)
     parser.add_argument("--min-chars", type=int, default=80)
     parser.add_argument("--limit", type=int, default=100)
@@ -56,6 +58,7 @@ def main() -> None:
     args = parser.parse_args()
 
     platforms = args.platform or ["douban", "tieba"]
+    raw_output, report_output, dashboard_output = resolve_outputs(args, platforms)
     print(f"[pipeline] platforms={', '.join(platforms)}")
     if platforms == ["douban"] and not args.url:
         reviews = collect_douban_reviews(
@@ -101,7 +104,7 @@ def main() -> None:
             "Use --allow-empty-output if you really want empty artifacts."
         )
         return
-    write_jsonl(args.raw_output, reviews)
+    write_jsonl(raw_output, reviews)
 
     report = analyze_reviews(
         reviews,
@@ -110,12 +113,21 @@ def main() -> None:
         require_agent=args.require_agent,
         batch_delay=args.batch_delay,
     )
-    write_json(args.report_output, report)
+    write_json(report_output, report)
 
-    dashboard = render_dashboard(report, args.dashboard_output)
-    print(f"Collected {len(reviews)} reviews -> {args.raw_output}")
-    print(f"Analysis report -> {args.report_output}")
+    dashboard = render_dashboard(report, dashboard_output)
+    print(f"Collected {len(reviews)} reviews -> {raw_output}")
+    print(f"Analysis report -> {report_output}")
     print(f"Dashboard -> {dashboard}")
+
+
+def resolve_outputs(args: argparse.Namespace, platforms: list[str]) -> tuple[Path, Path, Path]:
+    defaults = default_pipeline_outputs(args.book, platforms)
+    explicit = [args.raw_output, args.report_output, args.dashboard_output]
+    paths = [Path(value) if value else default for value, default in zip(explicit, defaults)]
+    if args.overwrite:
+        return tuple(paths)  # type: ignore[return-value]
+    return tuple(unique_path(path) if value else path for path, value in zip(paths, explicit))  # type: ignore[return-value]
 
 
 if __name__ == "__main__":
