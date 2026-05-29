@@ -94,13 +94,13 @@ def analyze_reviews(
     analyses: list[ReviewAnalysis] = []
     batches = chunked(reviews, batch_size)
     if batch_delay is None:
-        batch_delay = float(os.getenv("EASYCOMPUTE_BATCH_DELAY", "8"))
+        batch_delay = float(os.getenv("EASYCOMPUTE_RETRY_DELAY", os.getenv("EASYCOMPUTE_BATCH_DELAY", "8")))
     agent_batches = 0
     heuristic_batches = 0
 
     print(
         f"[analysis] reviews={len(reviews)} batch_size={batch_size} "
-        f"batches={len(batches)} batch_delay={batch_delay:g}s"
+        f"batches={len(batches)} retry_delay={batch_delay:g}s"
     )
     if use_agent:
         for line in client.config.diagnostic_lines():
@@ -120,12 +120,17 @@ def analyze_reviews(
     for batch_index, batch in enumerate(batches, 1):
         if use_agent and client.available:
             try:
-                analyses.extend(analyze_batch_with_agent_resilient(batch, client, batch_index, len(batches)))
+                analyses.extend(
+                    analyze_batch_with_agent_resilient(
+                        batch,
+                        client,
+                        batch_index,
+                        len(batches),
+                        retry_delay=batch_delay,
+                    )
+                )
                 agent_batches += 1
                 print(f"[analysis] batch {batch_index}/{len(batches)} analyzed by agent")
-                if batch_delay > 0 and batch_index < len(batches):
-                    print(f"[analysis] sleeping {batch_delay:g}s to avoid rate limit")
-                    time.sleep(batch_delay)
                 continue
             except Exception as exc:
                 print(f"[warn] batch {batch_index}/{len(batches)} agent failed; using heuristic fallback: {exc}")
@@ -189,26 +194,51 @@ def analyze_batch_with_agent_resilient(
     client: AgentClient,
     batch_index: int,
     total_batches: int,
+    retry_delay: float | None = None,
 ) -> list[ReviewAnalysis]:
+    if retry_delay is None:
+        retry_delay = float(os.getenv("EASYCOMPUTE_RETRY_DELAY", os.getenv("EASYCOMPUTE_BATCH_DELAY", "8")))
     try:
         return analyze_batch_with_agent(batch, client)
     except Exception as exc:
         if len(batch) <= 1 or not is_retryable_agent_error(exc):
             raise
         midpoint = len(batch) // 2
+        wait_seconds = retry_wait_seconds(retry_delay, len(batch))
         print(
             f"[analysis] batch {batch_index}/{total_batches} failed with retryable error; "
-            f"splitting {len(batch)} reviews into {midpoint}+{len(batch) - midpoint}"
+            f"sleeping {wait_seconds:g}s, then splitting {len(batch)} reviews into "
+            f"{midpoint}+{len(batch) - midpoint}"
         )
-        first = analyze_batch_with_agent_resilient(batch[:midpoint], client, batch_index, total_batches)
-        time.sleep(float(os.getenv("EASYCOMPUTE_BATCH_DELAY", "8")))
-        second = analyze_batch_with_agent_resilient(batch[midpoint:], client, batch_index, total_batches)
+        if wait_seconds > 0:
+            time.sleep(wait_seconds)
+        first = analyze_batch_with_agent_resilient(
+            batch[:midpoint],
+            client,
+            batch_index,
+            total_batches,
+            retry_delay=retry_delay,
+        )
+        second = analyze_batch_with_agent_resilient(
+            batch[midpoint:],
+            client,
+            batch_index,
+            total_batches,
+            retry_delay=retry_delay,
+        )
         return first + second
 
 
 def is_retryable_agent_error(exc: Exception) -> bool:
     text = str(exc).lower()
     return any(marker in text for marker in ("429", "ratelimit", "rate limit", "timed out", "timeout", "503", "504"))
+
+
+def retry_wait_seconds(base_delay: float, batch_length: int) -> float:
+    if base_delay <= 0:
+        return 0.0
+    scale = 1 if batch_length <= 2 else 1.5
+    return min(120.0, base_delay * scale)
 
 
 def complete_analysis(data: dict[str, Any], review: Review) -> ReviewAnalysis:

@@ -137,6 +137,7 @@ XHS_COOKIE=
 
 脚本会自动读取仓库根目录的 `.env`。`.env` 已加入 `.gitignore`，避免误提交 key。
 
+成功的 Agent batch 之间不会固定等待；只有遇到 429、超时、503/504 这类可重试错误时，才按 `EASYCOMPUTE_BATCH_DELAY` 或 `--batch-delay` 退避后重试。
 如果遇到模型 HTTP 429，可以降低 batch 压力：
 
 ```powershell

@@ -21,7 +21,7 @@ def main() -> None:
     parser.add_argument("--batch-size", type=int, default=6, help="每次发给 Agent 的评论数")
     parser.add_argument("--no-agent", action="store_true", help="不调用模型，使用本地启发式规则兜底")
     parser.add_argument("--require-agent", action="store_true", help="如果 Agent 不可用或调用失败，直接报错，不回退启发式规则")
-    parser.add_argument("--batch-delay", type=float, default=None, help="Agent batch 之间的等待秒数，默认读取 EASYCOMPUTE_BATCH_DELAY 或 8")
+    parser.add_argument("--batch-delay", type=float, default=None, help="Agent 可重试错误后的退避秒数；成功 batch 之间不等待")
     args = parser.parse_args()
 
     reviews = read_jsonl(args.input, fallback_book=args.book)
