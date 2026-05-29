@@ -22,6 +22,8 @@ python scripts/run_sentiment_pipeline.py --book "诡秘之主" --max-pages 2 --t
 - `outputs/runs/诡秘之主_douban_tieba_YYYYMMDD_HHMMSS/analysis_report.json`
 - `outputs/runs/诡秘之主_douban_tieba_YYYYMMDD_HHMMSS/sentiment_dashboard.html`
 
+HTML 看板是 React 交互式单文件，支持关键词搜索、平台/情绪筛选、排序、明暗主题切换、复制总结和导出筛选后的 JSON。默认从 CDN 加载 React，离线环境打开时需要联网，或把 React UMD 文件改成本地路径。
+
 如果你想写到固定路径，可以显式传输出参数；默认不会覆盖已存在文件，会自动追加 `_2`、`_3`。只有加 `--overwrite` 才会覆盖：
 
 ```powershell
