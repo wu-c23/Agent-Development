@@ -62,6 +62,7 @@ def main() -> None:
             delay=args.delay,
             timeout=args.timeout,
             retries=args.retries,
+            strict=args.strict,
         )
     else:
         reviews = collect_reviews(

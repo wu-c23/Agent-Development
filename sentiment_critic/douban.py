@@ -94,7 +94,11 @@ class DoubanBookReviewCrawler:
         for page_index in range(max(pages, 1)):
             start = page_index * 20
             list_url = build_reviews_url(subject.subject_id, start=start, sort=sort)
-            html = self.get_text(list_url, referer=subject.url)
+            try:
+                html = self.get_text(list_url, referer=subject.url)
+            except RuntimeError as exc:
+                print(f"[warn] Douban review list skipped: {exc}")
+                break
             page_reviews = self.parse_review_list(
                 html=html,
                 book=book or subject.title,
@@ -684,6 +688,7 @@ def collect_douban_reviews(
     delay: float = 2.0,
     timeout: int = 20,
     retries: int = 2,
+    strict: bool = False,
 ) -> list[Review]:
     crawler = DoubanBookReviewCrawler(cookie=cookie, delay=delay, timeout=timeout, retries=retries)
     reviews: list[Review] = []
@@ -700,16 +705,21 @@ def collect_douban_reviews(
             )
         )
     if not input_html:
-        reviews.extend(
-            crawler.collect(
-                book=book,
-                subject_id=subject_id,
-                subject_url=subject_url,
-                pages=pages,
-                sort=sort,
-                limit=limit,
-                min_chars=min_chars,
-                fetch_full=fetch_full,
+        try:
+            reviews.extend(
+                crawler.collect(
+                    book=book,
+                    subject_id=subject_id,
+                    subject_url=subject_url,
+                    pages=pages,
+                    sort=sort,
+                    limit=limit,
+                    min_chars=min_chars,
+                    fetch_full=fetch_full,
+                )
             )
-        )
+        except (RuntimeError, ValueError) as exc:
+            if strict:
+                raise
+            print(f"[warn] Douban collection skipped: {exc}")
     return dedupe_reviews(reviews)[:limit]

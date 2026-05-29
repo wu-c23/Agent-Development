@@ -412,6 +412,7 @@ def collect_reviews(
                         delay=delay,
                         timeout=timeout,
                         retries=retries,
+                        strict=strict,
                     )
                 )
             except (RuntimeError, ValueError) as exc:

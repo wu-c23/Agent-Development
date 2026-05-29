@@ -30,6 +30,7 @@ def main() -> None:
     parser.add_argument("--retries", type=int, default=2, help="失败重试次数")
     parser.add_argument("--no-full-review", action="store_true", help="只用列表页摘要，不进入单篇书评页抓全文")
     parser.add_argument("--search-only", action="store_true", help="只搜索豆瓣图书条目并打印候选 subject，不抓书评")
+    parser.add_argument("--strict", action="store_true", help="抓取失败时直接抛出错误")
     parser.add_argument("--allow-empty-output", action="store_true", help="允许用空结果覆盖输出文件")
     args = parser.parse_args()
 
@@ -67,6 +68,7 @@ def main() -> None:
         delay=args.delay,
         timeout=args.timeout,
         retries=args.retries,
+        strict=args.strict,
     )
     if not reviews and not args.allow_empty_output:
         print(

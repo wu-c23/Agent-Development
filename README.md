@@ -39,6 +39,8 @@ python scripts/run_sentiment_pipeline.py --book "诡秘之主" --platform tieba 
 
 豆瓣爬虫会自动搜索图书条目，并把书名和 subject id 缓存在 `data/douban_subject_cache.json`。更稳的方式是直接提供豆瓣图书页面的 subject id 或 URL：
 
+豆瓣现在没有面向普通开发者、可稳定抓取图书书评的公开官方 API。当前实现采用公开网页 + 少量豆瓣站内 JSON 搜索端点做条目定位；如果页面触发安全验证，脚本会跳过豆瓣并继续其它平台，除非你加了 `--strict`。
+
 ```powershell
 python scripts/collect_douban_reviews.py --book "诡秘之主" --subject-id "豆瓣subject数字ID" --pages 2
 python scripts/collect_douban_reviews.py --book "诡秘之主" --subject-url "https://book.douban.com/subject/xxxx/" --pages 2
