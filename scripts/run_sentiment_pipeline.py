@@ -17,13 +17,24 @@ from sentiment_critic.models import write_json, write_jsonl
 def main() -> None:
     parser = argparse.ArgumentParser(description="一键执行采集、Agent 分析、舆情看板生成。")
     parser.add_argument("--book", required=True, help="小说名")
-    parser.add_argument("--platform", action="append", choices=["tieba", "douban", "xiaohongshu"], help="要搜索的平台，可重复")
+    parser.add_argument(
+        "--platform",
+        action="append",
+        choices=["tieba", "douban", "xiaohongshu"],
+        help="要搜索的平台，可重复；不填时默认抓 douban + tieba",
+    )
     parser.add_argument("--subject-id", default="", help="豆瓣图书 subject id；只抓豆瓣时推荐填写")
     parser.add_argument("--subject-url", default="", help="豆瓣图书页面 URL；只抓豆瓣时可填写")
     parser.add_argument("--no-full-review", action="store_true", help="豆瓣模式下只抓列表摘要，不进入书评详情页")
     parser.add_argument("--keyword", default="", help="贴吧/小红书搜索关键词；默认自动拼接书名、书评、文笔、逻辑、更新")
     parser.add_argument("--no-fetch-detail", action="store_true", help="贴吧/小红书只解析搜索页摘要，不进入帖子或笔记详情")
     parser.add_argument("--thread-pages", type=int, default=1, help="贴吧每个帖子最多抓取页数")
+    parser.add_argument(
+        "--tieba-backend",
+        choices=["auto", "web", "aiotieba"],
+        default="auto",
+        help="贴吧采集后端；默认优先 aiotieba，再回退网页解析",
+    )
     parser.add_argument("--url", action="append", help="指定评论页或搜索结果页 URL，可重复")
     parser.add_argument("--input-html", action="append", help="本地 HTML 文件，可重复")
     parser.add_argument("--input", default="", help="已有评论 JSONL；提供后会和抓取结果合并")
@@ -44,7 +55,8 @@ def main() -> None:
     parser.add_argument("--allow-empty-output", action="store_true", help="允许用空结果覆盖输出文件并继续生成空报告")
     args = parser.parse_args()
 
-    platforms = args.platform or []
+    platforms = args.platform or ["douban", "tieba"]
+    print(f"[pipeline] platforms={', '.join(platforms)}")
     if platforms == ["douban"] and not args.url:
         reviews = collect_douban_reviews(
             book=args.book,
@@ -63,7 +75,7 @@ def main() -> None:
     else:
         reviews = collect_reviews(
             book=args.book,
-            platforms=args.platform,
+            platforms=platforms,
             urls=args.url,
             input_html=args.input_html,
             input_jsonl=args.input,
@@ -76,6 +88,7 @@ def main() -> None:
             limit=args.limit,
             fetch_detail=not args.no_fetch_detail,
             thread_pages=args.thread_pages,
+            tieba_backend=args.tieba_backend,
             delay=args.delay,
             timeout=args.timeout,
             retries=args.retries,

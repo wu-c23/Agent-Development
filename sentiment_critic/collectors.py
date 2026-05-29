@@ -313,6 +313,7 @@ def collect_reviews(
     limit: int = 100,
     fetch_detail: bool = True,
     thread_pages: int = 1,
+    tieba_backend: str = "auto",
     delay: float = 2.0,
     timeout: int = 20,
     retries: int = 2,
@@ -357,6 +358,7 @@ def collect_reviews(
                         limit=limit,
                         fetch_threads=fetch_detail,
                         thread_pages=thread_pages,
+                        backend=tieba_backend,
                         urls=[url],
                         delay=delay,
                         timeout=timeout,
@@ -410,7 +412,6 @@ def collect_reviews(
                         delay=delay,
                         timeout=timeout,
                         retries=retries,
-                        strict=strict,
                     )
                 )
             except (RuntimeError, ValueError) as exc:
@@ -431,6 +432,7 @@ def collect_reviews(
                         limit=limit,
                         fetch_threads=fetch_detail,
                         thread_pages=thread_pages,
+                        backend=tieba_backend,
                         delay=delay,
                         timeout=timeout,
                         retries=retries,
@@ -486,4 +488,22 @@ def collect_reviews(
             "Try --url with a specific review page, --input-html with saved pages, "
             "or set platform cookies such as TIEBA_COOKIE/DOUBAN_COOKIE/XHS_COOKIE."
         )
-    return unique[:limit]
+    return balanced_limit_reviews(unique, limit)
+
+
+def balanced_limit_reviews(reviews: list[Review], limit: int) -> list[Review]:
+    if limit <= 0 or len(reviews) <= limit:
+        return reviews
+    platforms = list(dict.fromkeys(review.platform for review in reviews))
+    if len(platforms) <= 1:
+        return reviews[:limit]
+    grouped = {platform: [review for review in reviews if review.platform == platform] for platform in platforms}
+    balanced: list[Review] = []
+    while len(balanced) < limit and any(grouped.values()):
+        for platform in platforms:
+            if not grouped[platform]:
+                continue
+            balanced.append(grouped[platform].pop(0))
+            if len(balanced) >= limit:
+                break
+    return balanced
