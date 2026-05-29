@@ -5,5 +5,8 @@ __all__ = [
     "analyzer",
     "collectors",
     "dashboard",
+    "douban",
     "models",
+    "tieba",
+    "xiaohongshu",
 ]

@@ -13,6 +13,7 @@ import re
 import requests
 from bs4 import BeautifulSoup, Tag
 
+from .agent_client import load_env_files
 from .collectors import is_review_like
 from .models import Review, dedupe_reviews, normalize_space, read_jsonl
 
@@ -49,6 +50,7 @@ class DoubanBookReviewCrawler:
         timeout: int = 20,
         retries: int = 2,
     ) -> None:
+        load_env_files()
         self.delay = max(delay, 0.0)
         self.timeout = timeout
         self.retries = max(retries, 0)

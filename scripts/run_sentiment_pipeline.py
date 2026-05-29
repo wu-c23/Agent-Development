@@ -21,6 +21,9 @@ def main() -> None:
     parser.add_argument("--subject-id", default="", help="豆瓣图书 subject id；只抓豆瓣时推荐填写")
     parser.add_argument("--subject-url", default="", help="豆瓣图书页面 URL；只抓豆瓣时可填写")
     parser.add_argument("--no-full-review", action="store_true", help="豆瓣模式下只抓列表摘要，不进入书评详情页")
+    parser.add_argument("--keyword", default="", help="贴吧/小红书搜索关键词；默认自动拼接书名、书评、文笔、逻辑、更新")
+    parser.add_argument("--no-fetch-detail", action="store_true", help="贴吧/小红书只解析搜索页摘要，不进入帖子或笔记详情")
+    parser.add_argument("--thread-pages", type=int, default=1, help="贴吧每个帖子最多抓取页数")
     parser.add_argument("--url", action="append", help="指定评论页或搜索结果页 URL，可重复")
     parser.add_argument("--input-html", action="append", help="本地 HTML 文件，可重复")
     parser.add_argument("--input", default="", help="已有评论 JSONL；提供后会和抓取结果合并")
@@ -30,6 +33,9 @@ def main() -> None:
     parser.add_argument("--max-pages", type=int, default=1)
     parser.add_argument("--min-chars", type=int, default=80)
     parser.add_argument("--limit", type=int, default=100)
+    parser.add_argument("--delay", type=float, default=2.0, help="采集请求间隔秒数")
+    parser.add_argument("--timeout", type=int, default=20, help="采集请求超时秒数")
+    parser.add_argument("--retries", type=int, default=2, help="采集失败重试次数")
     parser.add_argument("--batch-size", type=int, default=6)
     parser.add_argument("--no-agent", action="store_true", help="不调用模型，使用本地启发式规则")
     parser.add_argument("--require-agent", action="store_true", help="如果 Agent 不可用或调用失败，直接报错，不回退启发式规则")
@@ -50,6 +56,9 @@ def main() -> None:
             fetch_full=not args.no_full_review,
             input_html=args.input_html,
             input_jsonl=args.input,
+            delay=args.delay,
+            timeout=args.timeout,
+            retries=args.retries,
         )
     else:
         reviews = collect_reviews(
@@ -58,9 +67,18 @@ def main() -> None:
             urls=args.url,
             input_html=args.input_html,
             input_jsonl=args.input,
+            keyword=args.keyword,
+            douban_subject_id=args.subject_id,
+            douban_subject_url=args.subject_url,
+            douban_fetch_full=not args.no_full_review,
             max_pages=args.max_pages,
             min_chars=args.min_chars,
             limit=args.limit,
+            fetch_detail=not args.no_fetch_detail,
+            thread_pages=args.thread_pages,
+            delay=args.delay,
+            timeout=args.timeout,
+            retries=args.retries,
             strict=args.strict,
         )
     if not reviews and not args.allow_empty_output:

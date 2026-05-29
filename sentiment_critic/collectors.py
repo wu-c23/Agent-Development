@@ -9,6 +9,7 @@ from urllib.request import Request, urlopen
 import os
 import re
 
+from .agent_client import load_env_files
 from .models import Review, dedupe_reviews, normalize_space, read_jsonl
 
 
@@ -111,6 +112,7 @@ def build_search_url(platform: str, book: str, page_index: int = 0) -> str:
 
 
 def fetch_url(url: str, platform: str = "") -> str:
+    load_env_files()
     platform = platform or infer_platform(url)
     headers = {
         "User-Agent": os.getenv(
@@ -302,13 +304,23 @@ def collect_reviews(
     urls: list[str] | None = None,
     input_html: list[str] | None = None,
     input_jsonl: str = "",
+    keyword: str = "",
+    douban_subject_id: str = "",
+    douban_subject_url: str = "",
+    douban_fetch_full: bool = True,
     max_pages: int = 1,
     min_chars: int = 80,
     limit: int = 100,
+    fetch_detail: bool = True,
+    thread_pages: int = 1,
+    delay: float = 2.0,
+    timeout: int = 20,
+    retries: int = 2,
     strict: bool = False,
 ) -> list[Review]:
     reviews: list[Review] = []
     errors: list[str] = []
+    platforms = [platform.lower() for platform in platforms or []]
 
     if input_jsonl:
         reviews.extend(read_jsonl(input_jsonl, fallback_book=book))
@@ -316,12 +328,61 @@ def collect_reviews(
     for html_path in input_html or []:
         path = Path(html_path)
         platform = infer_platform(path.name)
+        if platform == "manual" and len(platforms) == 1:
+            platform = platforms[0]
+        if platform == "tieba":
+            from .tieba import TiebaBookReviewCrawler
+
+            reviews.extend(TiebaBookReviewCrawler(delay=0).parse_saved_html([html_path], book, min_chars))
+            continue
+        if platform == "xiaohongshu":
+            from .xiaohongshu import XiaohongshuBookReviewCrawler
+
+            reviews.extend(XiaohongshuBookReviewCrawler(delay=0).parse_saved_html([html_path], book, min_chars))
+            continue
         html = path.read_text(encoding="utf-8", errors="ignore")
         reviews.extend(extract_reviews_from_html(html, book, platform, str(path), min_chars))
 
     for url in urls or []:
         platform = infer_platform(url)
         try:
+            if platform == "tieba":
+                from .tieba import collect_tieba_reviews
+
+                reviews.extend(
+                    collect_tieba_reviews(
+                        book=book,
+                        pages=0,
+                        min_chars=min_chars,
+                        limit=limit,
+                        fetch_threads=fetch_detail,
+                        thread_pages=thread_pages,
+                        urls=[url],
+                        delay=delay,
+                        timeout=timeout,
+                        retries=retries,
+                        strict=strict,
+                    )
+                )
+                continue
+            if platform == "xiaohongshu":
+                from .xiaohongshu import collect_xiaohongshu_reviews
+
+                reviews.extend(
+                    collect_xiaohongshu_reviews(
+                        book=book,
+                        pages=0,
+                        min_chars=min_chars,
+                        limit=limit,
+                        fetch_notes=fetch_detail,
+                        urls=[url],
+                        delay=delay,
+                        timeout=timeout,
+                        retries=retries,
+                        strict=strict,
+                    )
+                )
+                continue
             html = fetch_url(url, platform=platform)
         except RuntimeError as exc:
             if strict:
@@ -330,8 +391,79 @@ def collect_reviews(
             continue
         reviews.extend(extract_reviews_from_html(html, book, platform, url, min_chars))
 
-    for platform in platforms or []:
-        platform = platform.lower()
+    for platform in platforms:
+        if platform == "douban":
+            from .douban import collect_douban_reviews
+
+            if max_pages <= 0:
+                continue
+            try:
+                reviews.extend(
+                    collect_douban_reviews(
+                        book=book,
+                        subject_id=douban_subject_id,
+                        subject_url=douban_subject_url,
+                        pages=max_pages,
+                        min_chars=min_chars,
+                        limit=limit,
+                        fetch_full=douban_fetch_full,
+                        delay=delay,
+                        timeout=timeout,
+                        retries=retries,
+                        strict=strict,
+                    )
+                )
+            except (RuntimeError, ValueError) as exc:
+                if strict:
+                    raise
+                errors.append(str(exc))
+            continue
+        if platform == "tieba":
+            from .tieba import collect_tieba_reviews
+
+            try:
+                reviews.extend(
+                    collect_tieba_reviews(
+                        book=book,
+                        keyword=keyword,
+                        pages=max_pages,
+                        min_chars=min_chars,
+                        limit=limit,
+                        fetch_threads=fetch_detail,
+                        thread_pages=thread_pages,
+                        delay=delay,
+                        timeout=timeout,
+                        retries=retries,
+                        strict=strict,
+                    )
+                )
+            except RuntimeError as exc:
+                if strict:
+                    raise
+                errors.append(str(exc))
+            continue
+        if platform == "xiaohongshu":
+            from .xiaohongshu import collect_xiaohongshu_reviews
+
+            try:
+                reviews.extend(
+                    collect_xiaohongshu_reviews(
+                        book=book,
+                        keyword=keyword,
+                        pages=max_pages,
+                        min_chars=min_chars,
+                        limit=limit,
+                        fetch_notes=fetch_detail,
+                        delay=delay,
+                        timeout=timeout,
+                        retries=retries,
+                    )
+                )
+            except RuntimeError as exc:
+                if strict:
+                    raise
+                errors.append(str(exc))
+            continue
         for page_index in range(max_pages):
             url = build_search_url(platform, book, page_index)
             try:
