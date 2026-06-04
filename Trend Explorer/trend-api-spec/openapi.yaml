@@ -1,0 +1,454 @@
+openapi: 3.0.3
+info:
+  title: Novel Trend Windvane API
+  version: 1.0.0
+  description: >
+    “全网风向标”趋势数据输出接口。该 API 用于连接爬虫 JSONL 数据、
+    趋势分析 Agent 和 React 趋势大屏。所有接口统一返回 code、message、
+    data、timestamp。
+servers:
+  - url: http://127.0.0.1:8000
+    description: Local FastAPI demo
+tags:
+  - name: Trends
+    description: 趋势大屏核心数据接口
+paths:
+  /api/trends/hot-tags:
+    get:
+      tags: [Trends]
+      summary: 获取热门标签排行
+      description: 返回全标签热度排行。热度趋势仅基于历史月票榜，细标签来自作品详情页补充。
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HotTagsResponse"
+  /api/trends/heat-curve:
+    get:
+      tags: [Trends]
+      summary: 获取标签热度趋势曲线
+      description: >
+        返回按月份聚合的标签热度曲线。仅统计历史月票榜数据；
+        一本作品的月票数会完整贡献给该作品的每一个标签，单位为 k。
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HeatCurveResponse"
+  /api/trends/platform-compare:
+    get:
+      tags: [Trends]
+      summary: 获取平台热度对比
+      description: 返回当前已接入平台的数据覆盖、相对热度和主要标签。当前自动采集来源为纵横中文网，起点暂不注入展示。
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PlatformCompareResponse"
+  /api/trends/genre-migration:
+    get:
+      tags: [Trends]
+      summary: 获取流派迁移关系
+      description: 返回兼容旧版大屏的流派迁移关系图数据。新版大屏优先使用 genre-cloud-timeline。
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenreMigrationResponse"
+  /api/trends/rising-works:
+    get:
+      tags: [Trends]
+      summary: 获取上升作品榜
+      description: 返回综合榜单中上升最快或热度最高的作品列表。
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RisingWorksResponse"
+  /api/trends/summary:
+    get:
+      tags: [Trends]
+      summary: 获取趋势摘要
+      description: 返回趋势分析摘要，可作为推荐系统或运营报告的摘要输入。
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SummaryResponse"
+  /api/trends/dashboard:
+    get:
+      tags: [Trends]
+      summary: 获取趋势大屏聚合数据
+      description: 返回前端大屏一次渲染所需的聚合数据。
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+  /api/trends/genre-cloud-timeline:
+    get:
+      tags: [Trends]
+      summary: 获取逐月流派词云
+      description: 返回基于历史月票榜的逐月流派词云，用于观察流派热度重心迁移。
+      responses:
+        "200":
+          description: 成功
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GenreCloudTimelineResponse"
+components:
+  schemas:
+    ApiEnvelope:
+      type: object
+      required: [code, message, data, timestamp]
+      properties:
+        code:
+          type: integer
+          example: 0
+        message:
+          type: string
+          example: success
+        data:
+          description: Endpoint-specific payload.
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-05-30T12:00:00Z"
+    HotTag:
+      type: object
+      required: [tag, heat, change]
+      properties:
+        tag:
+          type: string
+          example: 热血
+        heat:
+          type: integer
+          description: 0-100 归一化热度
+          example: 96
+        change:
+          type: number
+          description: 首末月份变化率百分比
+          example: 18.6
+        group:
+          type: string
+          example: 情绪价值
+        stage:
+          type: string
+          enum: [rising, stable, cooling, pending]
+          example: rising
+        relatedWorks:
+          type: array
+          items:
+            type: string
+          example: ["齐天", "无敌天命"]
+    HeatCurve:
+      type: object
+      required: [dates, series]
+      properties:
+        dates:
+          type: array
+          items:
+            type: string
+          example: ["01月", "02月", "03月", "04月", "05月"]
+        unit:
+          type: string
+          example: k
+        source:
+          type: string
+          example: monthly-ticket
+        valueLabel:
+          type: string
+          example: 月票
+        series:
+          type: array
+          items:
+            type: object
+            required: [name, data]
+            properties:
+              name:
+                type: string
+                example: 热血
+              data:
+                type: array
+                items:
+                  type: number
+                example: [124.3, 118.6, 132.1, 146.8, 153.2]
+              description:
+                type: string
+    PlatformCompareItem:
+      type: object
+      required: [platform, heat, works, topTags, status]
+      properties:
+        platform:
+          type: string
+          example: 纵横中文网
+        heat:
+          type: integer
+          example: 100
+        works:
+          type: integer
+          example: 576
+        topTags:
+          type: array
+          items:
+            type: string
+          example: ["玄幻奇幻", "热血", "剑道"]
+        status:
+          type: string
+          enum: [active, pending]
+          example: active
+    GenreMigration:
+      type: object
+      required: [nodes, links]
+      properties:
+        nodes:
+          type: array
+          items:
+            type: object
+            required: [name]
+            properties:
+              name:
+                type: string
+                example: 传统玄幻
+        links:
+          type: array
+          items:
+            type: object
+            required: [source, target, value]
+            properties:
+              source:
+                type: string
+                example: 传统升级流
+              target:
+                type: string
+                example: 家族群像流
+              value:
+                type: integer
+                example: 18
+              change:
+                type: number
+                example: 26.4
+              reason:
+                type: string
+    GenreCloudTimeline:
+      type: object
+      required: [periods, unit, clouds]
+      properties:
+        periods:
+          type: array
+          items:
+            type: string
+          example: ["01月", "02月", "03月", "04月", "05月"]
+        unit:
+          type: string
+          example: k
+        summary:
+          type: string
+        clouds:
+          type: array
+          items:
+            type: object
+            required: [period, genres]
+            properties:
+              period:
+                type: string
+                example: 05月
+              genres:
+                type: array
+                items:
+                  type: object
+                  required: [name, value]
+                  properties:
+                    name:
+                      type: string
+                      example: 传统玄幻
+                    value:
+                      type: number
+                      example: 152.4
+    RisingWork:
+      type: object
+      required: [id, title, platform, rank, rankChange, heatScore, listType, tags]
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+          example: 齐天
+        author:
+          type: string
+          example: 日落红尘
+        platform:
+          type: string
+          example: 纵横中文网
+        category:
+          type: string
+          example: 玄幻奇幻
+        tags:
+          type: array
+          items:
+            type: string
+          example: ["玄幻奇幻", "热血", "剑道", "家族崛起"]
+        detailUrl:
+          type: string
+          format: uri
+        rank:
+          type: integer
+          example: 2
+        rankChange:
+          type: integer
+          example: 8
+        heatScore:
+          type: number
+          example: 16458
+        listType:
+          type: string
+          example: 月票榜-2026年04月
+        summary:
+          type: string
+        capturedAt:
+          type: string
+          format: date-time
+    MonthlyCoverage:
+      type: object
+      properties:
+        requiredMonths:
+          type: array
+          items:
+            type: string
+          example: ["20261", "20262", "20263", "20264", "20265"]
+        months:
+          type: array
+          items:
+            type: object
+            properties:
+              month:
+                type: string
+              label:
+                type: string
+              records:
+                type: integer
+              expectedRecords:
+                type: integer
+              complete:
+                type: boolean
+              tagCount:
+                type: integer
+              heatTotalK:
+                type: number
+        missingMonths:
+          type: array
+          items:
+            type: string
+        incompleteMonths:
+          type: array
+          items:
+            type: string
+        isComplete:
+          type: boolean
+    HotTagsResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelope"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/HotTag"
+    HeatCurveResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelope"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/HeatCurve"
+    PlatformCompareResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelope"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/PlatformCompareItem"
+    GenreMigrationResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelope"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/GenreMigration"
+    GenreCloudTimelineResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelope"
+        - type: object
+          properties:
+            data:
+              $ref: "#/components/schemas/GenreCloudTimeline"
+    RisingWorksResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelope"
+        - type: object
+          properties:
+            data:
+              type: array
+              items:
+                $ref: "#/components/schemas/RisingWork"
+    SummaryResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelope"
+        - type: object
+          properties:
+            data:
+              type: object
+              required: [summary]
+              properties:
+                summary:
+                  type: string
+    DashboardResponse:
+      allOf:
+        - $ref: "#/components/schemas/ApiEnvelope"
+        - type: object
+          properties:
+            data:
+              type: object
+              properties:
+                generatedAt:
+                  type: string
+                  format: date-time
+                summary:
+                  type: string
+                heatCurve:
+                  $ref: "#/components/schemas/HeatCurve"
+                hotTags:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/HotTag"
+                platformCompare:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/PlatformCompareItem"
+                migration:
+                  $ref: "#/components/schemas/GenreMigration"
+                genreCloudTimeline:
+                  $ref: "#/components/schemas/GenreCloudTimeline"
+                risingWorks:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/RisingWork"
+                dataQuality:
+                  $ref: "#/components/schemas/MonthlyCoverage"
