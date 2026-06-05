@@ -130,6 +130,17 @@ class SafeSearchEngine:
         # Step 1: Extract intent
         intent = self._intent.extract(query)
 
+        # Map intent constraints to avoid_tags so they participate in filtering
+        _constraint_to_tag = {
+            "no_harem": "后宫",
+            "no_love_triangle": "多角恋",
+            "no_abuse_protagonist": "虐主",
+        }
+        for constraint in intent.constraints:
+            mapped_tag = _constraint_to_tag.get(constraint)
+            if mapped_tag and mapped_tag not in avoid_tags:
+                avoid_tags.append(mapped_tag)
+
         # Step 2: Build enriched query and metadata filter from intent
         enriched_query = self._intent.build_search_query(query, intent)
         metadata_filter = self._intent.build_metadata_filter(intent)

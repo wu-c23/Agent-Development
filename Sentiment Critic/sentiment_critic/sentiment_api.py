@@ -6,6 +6,8 @@ Endpoints:
   GET  /api/v1/sentiment/detail/{uid}  — 单书舆情详情
   GET  /api/v1/sentiment/compare       — 多书舆情对比
   GET  /api/v1/sentiment/health        — 健康检查
+  POST /api/v1/sentiment/chat          — RAG 智能问答
+  GET  /api/v1/sentiment/kb/stats      — 知识库统计
 """
 
 from __future__ import annotations
@@ -19,6 +21,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .data_store import build_mock_sentiment_store, reload as reload_data_store
+from .rag_engine import get_rag_engine
+from pydantic import BaseModel, Field
 
 app = FastAPI(
     title="Sentiment Critic API",
@@ -48,6 +52,12 @@ def _init_store() -> None:
 
 
 _init_store()
+
+
+class ChatRequest(BaseModel):
+    query: str = Field(..., min_length=1, max_length=500, description="用户问题")
+    top_k: int = Field(default=5, ge=1, le=10, description="检索数量")
+    session_id: str = Field(default="", max_length=128, description="会话ID，用于多轮对话上下文关联")
 
 
 # ---------------------------------------------------------------------------
@@ -102,6 +112,43 @@ async def refresh_data():
     reload_data_store()
     _init_store()
     return {"status": "refreshed", "index_count": len(_SENTIMENT_STORE)}
+
+
+@app.post("/api/v1/sentiment/chat")
+async def rag_chat(request: ChatRequest):
+    """RAG 智能问答 — 基于知识库检索 + LLM 生成自然语言回答。
+
+    示例问题:
+      - 推荐悬疑小说
+      - 诡秘之主好看吗
+      - 有没有类似凡人修仙传的书
+      - 修罗武神评价怎么样
+    """
+    engine = get_rag_engine()
+    result = engine.answer(request.query, top_k=request.top_k, session_id=request.session_id)
+    return {
+        "query": request.query,
+        "answer": result["answer"],
+        "sources": result["sources"],
+        "method": result["method"],
+    }
+
+
+@app.get("/api/v1/sentiment/kb/stats")
+async def kb_stats():
+    """知识库统计 — 返回索引的文档块数量、检索方式等信息。"""
+    from .rag_engine import get_vector_store
+
+    engine = get_rag_engine()
+    vs = get_vector_store()
+    stats = {
+        "total_chunks": engine.kb.total_chunks,
+        "llm_available": engine.use_agent,
+        "retrieval_method": engine.retrieval_method,
+        "vector_enabled": vs is not None and vs.ready,
+        "vector_chunks": vs.total_chunks if vs and vs.ready else 0,
+    }
+    return stats
 
 
 @app.get("/api/v1/sentiment/detail/{uid}")

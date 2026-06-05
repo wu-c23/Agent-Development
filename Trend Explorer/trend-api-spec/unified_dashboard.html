@@ -613,33 +613,170 @@ const RECOMMEND_PATTERNS = [
   "书荒", "类似", "有没有类似", "找书", "来一本", "给推荐",
   "能不能推荐", "有什么好", "哪些", "有没有什么",
 ];
+const CHAT_PATTERNS = [
+  // 自指/能力询问
+  "你还能", "你能做", "你会", "你有什么", "你的功能", "你的作用",
+  "你能干什么", "你能干嘛", "你会什么", "你会干嘛",
+  "你是谁", "你叫什么", "你是干什么的",
+  // 非书籍闲聊
+  "讲个笑话", "聊天", "聊会", "唠嗑", "无聊", "有意思",
+  "天气", "今天心情", "怎么办", "好烦", "好累",
+  "有什么用", "没什么用", "不智能", "太笨",
+  // 元问题
+  "除了推荐", "除了找书", "除了搜索", "还有别的", "还有其他",
+  "还能做", "还可以",
+  // 反馈/纠错/质疑（优先级高于推荐，避免 "为什么推荐了5本" 被当成推荐请求）
+  "为什么", "你怎么", "不是让你", "我没说", "我没让",
+  "谁让你", "谁让你", "我没叫你", "你搞错", "你理解错",
+  "我说的是", "我的意思是", "不是这个", "不对",
+  "别推荐", "不要推荐", "别再推", "不是推荐",
+];
 
 function detectIntent(query) {
   const q = query.toLowerCase();
+
+  // 1. 先检测问候
   for (const p of GREETING_PATTERNS) {
     if (q.includes(p)) return "greeting";
   }
+
+  // 2. 检测闲聊/非书籍意图（优先级高于书籍推荐）
+  for (const p of CHAT_PATTERNS) {
+    if (q.includes(p)) return "chat";
+  }
+
+  // 3. 检测书籍询问
   for (const p of INQUIRY_PATTERNS) {
     if (q.includes(p)) return "book_inquiry";
   }
+
+  // 4. 检测推荐请求
   for (const p of RECOMMEND_PATTERNS) {
     if (q.includes(p)) return "recommendation";
   }
-  // 短查询且没有明确推荐意图 -> 可能是询问或闲聊
-  if (q.length <= 8 && !/[?？]/.test(q)) return "chat";
-  if (/[?？]/.test(q)) return "book_inquiry"; // 带问号可能是询问
-  return "recommendation";
+
+  // 5. 无明确信号 → 默认为闲聊
+  return "chat";
 }
 
 // ============================================================
 // 对话响应生成
 // ============================================================
 
-const CHAT_RESPONSES = [
-  "你好！我是小说推荐助手。你可以问我：<br>• \"推荐好看的悬疑小说\"<br>• \"诡秘之主好看吗？\"<br>• \"有没有类似凡人修仙传的书\"<br>• \"最近什么类型的小说比较火\"",
-  "嗨！想找什么类型的小说呢？悬疑、修仙、科幻、玄幻……或者直接告诉我你喜欢的书名，我帮你找类似的~",
-  "在的！有什么阅读需求尽管说，比如想看什么类型、要完结的还是连载的、有哪些雷点需要避开。",
-];
+const CHAT_RESPONSES = {
+  greeting: [
+    "你好！我是小说推荐助手。你可以问我：<br>• \"推荐好看的悬疑小说\"<br>• \"诡秘之主好看吗？\"<br>• \"有没有类似凡人修仙传的书\"<br>• \"最近什么类型的小说比较火\"",
+    "嗨！想找什么类型的小说呢？悬疑、修仙、科幻、玄幻……或者直接告诉我你喜欢的书名，我帮你找类似的~",
+    "在的！有什么阅读需求尽管说，比如想看什么类型、要完结的还是连载的、有哪些雷点需要避开。",
+  ],
+  capability: [
+    "我的主要功能是帮你发现和了解网络小说：<br><br>📚 <b>智能推荐</b> — 告诉我你想看的类型/风格，我帮你找书<br>🔍 <b>书籍查询</b> — 想知道某本书的类型、评价、标签？直接问我<br>🛡️ <b>避雷过滤</b> — 选中下方的避雷标签，帮你排除后宫、烂尾等雷区<br>📊 <b>舆情分析</b> — 点击书名可以看到详细的评分和评论分析<br><br>还有其他功能在开发中，比如跨平台价格对比、更新提醒等。有什么想试试的吗？",
+    "我不仅可以推荐书籍，还能帮你：<br>• 查询某本小说的类型、标签、简介<br>• 找类似风格的作品<br>• 根据避雷标签过滤不合适的书<br>• 查看小说的综合评分和优缺点<br><br>试试对我说\"推荐玄幻爽文\"或者\"诡秘之主完结了吗\"？",
+  ],
+  chat: [
+    "我主要是个小说推荐助手~ 不过聊聊天也挺好的！你可以试试问我：<br>• \"推荐几本轻松搞笑的小说\"<br>• \"最近什么类型的书比较火\"<br>• \"凡人修仙传值得看吗\"",
+    "哈哈，我懂的确实还不多，不过找书我可是认真的！告诉我你的阅读偏好，我帮你精准推荐~",
+    "聊这个我也不太擅长😂 不过如果你想知道什么类型的小说好看，或者某本书的评价如何，我可以帮你！",
+  ],
+  help: [
+    "你可以这样跟我聊天：<br><br>📖 <b>求推荐</b>：\"推荐克苏鲁风格的悬疑小说\"<br>🔎 <b>查书籍</b>：\"绝色生骄是什么类型的小说\"<br>📝 <b>问评价</b>：\"诡秘之主好看吗\"<br>🔄 <b>找类似</b>：\"有没有类似凡人修仙传的书\"<br>🛡️ <b>避雷</b>：先点下方的标签，再问我推荐~<br><br>试试看？",
+  ],
+  fallback: [
+    "这个我还不太会回答😅 不过我擅长帮你找小说！<br>想看点什么呢？悬疑、修仙、玄幻、轻松搞笑……",
+  ],
+};
+
+function pickRandom(arr) {
+  return arr[Math.floor(Math.random() * arr.length)];
+}
+
+// 从查询中解析用户期望的推荐数量
+// 支持: 一本/1本/一部 → 1, 两本/两部/2本 → 2, 三本/三部/3本 → 3, ...
+//       几本/几部/一些 → 0 (表示未指定具体数字)
+// 注意: "第一本"/"第二本"是序数指代，不是数量，不参与数量解析
+const _CN_NUM = { "一":1,"二":2,"两":2,"三":3,"四":4,"五":5,"六":6,"七":7,"八":8,"九":9,"十":10 };
+function parseQuantity(query) {
+  const q = query.toLowerCase();
+  // 匹配: X本, X部, X个, X篇 (但排除"第X本/第X个"等序数指代)
+  const re = /(?:^|[^第])([一二两三四五六七八九十\d]+)\s*[本部门部篇个]/g;
+  let match;
+  while ((match = re.exec(q)) !== null) {
+    const numStr = match[1];
+    if (/^\d+$/.test(numStr)) {
+      const n = parseInt(numStr, 10);
+      if (n >= 1 && n <= 50) return n;
+    } else if (_CN_NUM[numStr]) {
+      return _CN_NUM[numStr];
+    }
+  }
+  // 模糊数量词
+  if (/几[本部门篇个]/.test(q)) return 0; // 几本 → 不限定，返回0
+  return 0; // 0 = 未指定
+}
+
+// ============================================================
+// 多轮对话上下文 — 记录上一轮推荐的书名，解析指代表达式
+// ============================================================
+
+let lastDisplayedBooks = [];
+
+function trackDisplayedBooks(results) {
+  // 从搜索结果中提取书名列表（按展示顺序）
+  const titles = [];
+  for (const r of (results || [])) {
+    const t = (r.metadata && r.metadata.title) ? r.metadata.title : '';
+    if (t && !titles.includes(t)) titles.push(t);
+  }
+  if (titles.length > 0) lastDisplayedBooks = titles;
+}
+
+function resolveBookReferences(query) {
+  // 检测"第X本/第X个/这本书/那本书"等指代表达式，
+  // 替换为具体的书名以增强检索准确性
+  if (!lastDisplayedBooks || lastDisplayedBooks.length === 0) return query;
+
+  const cnOrdinals = { "一":1,"二":2,"三":3,"四":4,"五":5,"六":6,"七":7,"八":8,"九":9,"十":10 };
+  let modified = query;
+
+  // 替换 "第X本/第X个" 为实际书名
+  modified = modified.replace(/第\s*([一二三四五六七八九十\d]+)\s*[本个]/g, (fullMatch, numStr) => {
+    let n;
+    if (/^\d+$/.test(numStr)) {
+      n = parseInt(numStr, 10);
+    } else {
+      n = cnOrdinals[numStr] || 0;
+    }
+    if (n >= 1 && n <= lastDisplayedBooks.length) {
+      return '《' + lastDisplayedBooks[n - 1] + '》';
+    }
+    return fullMatch;
+  });
+
+  // 替换 "这[本个]书"/"那[本个]书" → 第一本书
+  modified = modified.replace(/这[本个]书|那[本个]书|这[本个](?!书)|那[本个](?!书)/g, (fullMatch) => {
+    return '《' + lastDisplayedBooks[0] + '》';
+  });
+
+  return modified;
+}
+
+function getChatResponse(query) {
+  const q = query.toLowerCase();
+  // 反馈/纠错 — 用户指出系统的问题
+  if (/为什么.*推荐|为什么.*结果|不是让你|谁让你|你搞错|你理解错|我说的是|我的意思|别推荐|不要推荐|太快|太慢/.test(q)) {
+    return "抱歉理解有误！让我再试一次 — 你可以直接告诉我：想看什么类型、多少本、有什么雷点要避开，我会尽量准确地帮你找书。";
+  }
+  if (/你能|你会|功能|作用|干什么|干嘛|除了|还有其他|还能做|还可以做/.test(q)) {
+    return pickRandom(CHAT_RESPONSES.capability);
+  }
+  if (/帮助|怎么用|不会用|help|怎么操作/.test(q)) {
+    return pickRandom(CHAT_RESPONSES.help);
+  }
+  if (/无聊|聊天|唠嗑|心情|烦|累/.test(q)) {
+    return pickRandom(CHAT_RESPONSES.chat);
+  }
+  return pickRandom(CHAT_RESPONSES.chat);
+}
 
 function generateBookDetailHtml(card) {
   const m = card.metadata || {};
@@ -729,41 +866,57 @@ async function sendMessage() {
   const loadingId = appendMessage('assistant', '<div class="spinner"></div> 正在思考...');
 
   const intent = detectIntent(query);
-  const avoidTags = getSelectedAvoidTags();
 
-  // 简单问候直接回复，不需要调 API
+  // 问候和闲聊直接文本回复，不调搜索 API
   if (intent === "greeting") {
-    updateMessage(loadingId, CHAT_RESPONSES[Math.floor(Math.random() * CHAT_RESPONSES.length)]);
+    updateMessage(loadingId, pickRandom(CHAT_RESPONSES.greeting));
     input.disabled = false;
     btn.disabled = false;
     setTimeout(() => input.focus(), 100);
     return;
   }
 
+  if (intent === "chat") {
+    updateMessage(loadingId, getChatResponse(query));
+    input.disabled = false;
+    btn.disabled = false;
+    setTimeout(() => input.focus(), 100);
+    return;
+  }
+
+  // 以下两个意图需要调搜索 API：book_inquiry / recommendation
+  const avoidTags = getSelectedAvoidTags();
+
   try {
-    // 对于询问类，调大 top_k 以找到最匹配的书
-    const topK = (intent === "book_inquiry") ? 10 : 5;
+    const userQty = parseQuantity(query);
+    // 解析指代表达式：把"第一本"替换为上一轮推荐的实际书名
+    const searchQuery = resolveBookReferences(query);
+    // 用户明确说了 N 本就请求 N 本；否则用默认值
+    const defaultK = (intent === "book_inquiry") ? 10 : 5;
+    const topK = userQty > 0 ? Math.min(userQty + 2, 50) : defaultK;
+    const displayLimit = userQty > 0 ? userQty : 5;
     const resp = await fetch(`${API.search}/api/v1/search/semantic`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query, safe_tags: avoidTags, top_k: topK })
+      body: JSON.stringify({ query: searchQuery, safe_tags: avoidTags, top_k: topK })
     });
     if (!resp.ok) throw new Error('API error: ' + resp.status);
     const result = await resp.json();
 
+    // 记录本轮展示的书名，供下一轮指代解析使用
+    trackDisplayedBooks(result.results);
+
     const allResults = result.results || [];
-    // 过滤低相关度结果
     const relevantResults = allResults.filter(c => (c.relevance_score || 0) > 0.45);
-    const cards = relevantResults.slice(0, 5);
+    const cards = relevantResults.slice(0, displayLimit);
 
     let html = "";
     if (result.query_rewrite) {
       html += `<p style="font-size:13px;color:var(--text2);margin-bottom:8px">🔍 ${result.query_rewrite}</p>`;
     }
 
-    // 根据意图生成不同风格的回复
     if (intent === "book_inquiry" && cards.length > 0 && cards[0].relevance_score >= 0.55) {
-      // 询问特定书籍：展示书籍详情 + 自然语言描述
+      // 询问特定书籍：展示书籍详情
       const topCard = cards[0];
       html += generateBookDetailHtml(topCard);
       if (cards.length > 1 && cards[0].relevance_score - cards[1].relevance_score < 0.10) {
@@ -778,19 +931,6 @@ async function sendMessage() {
         });
         html += "</div>";
       }
-    } else if (intent === "chat" && cards.length > 0) {
-      // 闲聊但有搜索结果：简单回答 + 热门推荐
-      html += `<p>这个问题我还在学习中~ 不过这里有一些热门小说，你可以看看：</p>`;
-      html += `<div class="result-cards">`;
-      cards.slice(0, 5).forEach(card => {
-        const m = card.metadata || {};
-        const tags = (card.tags || []).slice(0, 3);
-        html += `<div class="result-card" onclick="openReview('${card.uid}', '${m.title}')">
-          <div class="title">📗 ${m.title || '未知'}</div>
-          <div class="meta">${m.platform || ''} · 热度: ${(card.relevance_score || 0).toFixed(2)}${tags.length ? ' · ' + tags.map(t => `<span class="tag-chip">${t}</span>`).join(" ") : ''}</div>
-        </div>`;
-      });
-      html += "</div>";
     } else if (cards.length === 0) {
       html += "<p>😕 没有找到匹配的小说。</p>";
       html += "<p style=\"font-size:13px;color:var(--text2)\">试试换个描述方式，或者直接告诉我你想看什么类型~</p>";

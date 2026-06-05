@@ -3,7 +3,8 @@
     "allow": [
       "Bash(python -c \"import subprocess; print\\(subprocess.run\\(['pip', 'list'], capture_output=True, text=True\\).stdout\\)\")",
       "Bash(python *)",
-      "Bash(PYTHONIOENCODING=utf-8 python unified_dashboard.py)"
+      "Bash(PYTHONIOENCODING=utf-8 python unified_dashboard.py)",
+      "Bash(python3 -c \"import json; data=json.load\\(open\\('F:/作业/软工2/网络小说大作业/Sentiment Critic/data/novels.json'\\)\\); print\\(f'novels: {len\\(data\\)} entries'\\)\")"
     ]
   }
 }

@@ -145,8 +145,12 @@ class IntentExtractor:
         return None
 
     def score_candidate(self, book: Book, intent: IntentResult) -> float:
-        """Score how well a candidate matches the extracted intent (0-1)."""
-        if not intent.topics and not intent.style and not intent.mood and not intent.protagonist_traits:
+        """Score how well a candidate matches the extracted intent (0-1).
+
+        Positive signals come from matching topics/style/mood/traits.
+        Negative signals come from violating constraints (e.g. no_harem).
+        """
+        if not intent.topics and not intent.style and not intent.mood and not intent.protagonist_traits and not intent.constraints:
             return 0.5  # neutral — no preference dimensions to match against
 
         signals: List[float] = []
@@ -164,7 +168,19 @@ class IntentExtractor:
         for trait in intent.protagonist_traits:
             signals.append(1.0 if trait in book_text else 0.0)
 
+        # Penalize constraint violations
+        _constraint_tag_map = {
+            "no_harem": ["后宫", "harem", "种马"],
+            "no_love_triangle": ["多角恋", "三角恋"],
+            "no_abuse_protagonist": ["虐主"],
+        }
+        for constraint in intent.constraints:
+            violation_tags = _constraint_tag_map.get(constraint, [])
+            for vtag in violation_tags:
+                if vtag in book.tags:
+                    signals.append(-0.5)  # penalty for violating a hard constraint
+
         if not signals:
             return 0.5
 
-        return sum(signals) / len(signals)
+        return max(0.0, sum(signals) / len(signals))

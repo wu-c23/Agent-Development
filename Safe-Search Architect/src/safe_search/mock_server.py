@@ -291,6 +291,43 @@ class SearchRequest(BaseModel):
     query: str
     safe_tags: list[str] = Field(default_factory=list)
     top_k: int = Field(default=10, ge=1, le=50)
+    session_id: str = Field(default="", max_length=128, description="会话ID，用于多轮对话指代解析")
+
+
+# ---------------------------------------------------------------------------
+# 会话存储 — 多轮对话上下文（进程内，重启后丢失）
+# ---------------------------------------------------------------------------
+
+_search_sessions: dict[str, list[str]] = {}  # session_id → 上一轮搜索的书名列表
+
+
+def _resolve_session_references(query: str, session_id: str) -> str:
+    """将会话上下文中的指代表达式（第一本/第二本/这本书）解析为具体书名。"""
+    if not session_id or session_id not in _search_sessions:
+        return query
+
+    last_titles = _search_sessions[session_id]
+    if not last_titles:
+        return query
+
+    cn_ordinals = {"一": 1, "二": 2, "三": 3, "四": 4, "五": 5, "六": 6, "七": 7, "八": 8, "九": 9, "十": 10}
+
+    def _replace_ordinal(match):
+        num_str = match.group(1)
+        if num_str.isdigit():
+            n = int(num_str)
+        else:
+            n = cn_ordinals.get(num_str, 0)
+        if 1 <= n <= len(last_titles):
+            return "《" + last_titles[n - 1] + "》"
+        return match.group(0)
+
+    import re
+    modified = re.sub(r"第\s*([一二三四五六七八九十\d]+)\s*[本个]", _replace_ordinal, query)
+    modified = re.sub(r"这[本个]书|那[本个]书|这[本个](?!书)|那[本个](?!书)",
+                      lambda m: "《" + last_titles[0] + "》" if last_titles else m.group(0),
+                      modified)
+    return modified
 
 
 # ---------------------------------------------------------------------------
@@ -414,11 +451,136 @@ def _calculate_relevance(novel: dict, query_lower: str) -> tuple[float, str, boo
     return relevance, reason, is_title_match
 
 
+def _collect_known_tags() -> set[str]:
+    """收集所有已知标签（用于排除匹配）。"""
+    tags: set[str] = set()
+    for novel in MOCK_NOVELS:
+        for tag in novel.get("tags", []):
+            t = tag.strip()
+            if t:
+                tags.add(t)
+    return tags
+
+
+def _parse_exclusions(query: str) -> tuple[str, set[str], set[str]]:
+    """从查询中解析排除条件。返回 (清理后的查询, 排除的书名集合, 排除的标签集合)。
+
+    识别模式:
+      - 书名排除: 不要X, 除了X, 不包括X, 去掉X, 排除X, 别推X
+      - 标签排除: 不TAG, 不要TAG, 非TAG, 不看TAG (TAG 匹配已知标签)
+    """
+    import re
+
+    exclude_phrases = [
+        r"注意[：:]?\s*不要\S+",
+        r"注意[：:]?\s*别\S+",
+        r"不要推荐\S+",
+        r"不要\S+",
+        r"别推荐\S+",
+        r"别推\S+",
+        r"除了\S+(?:以外|之外)?",
+        r"不包括\S+",
+        r"去掉\S+",
+        r"排除\S+",
+        r"不看\S+",
+    ]
+
+    excluded_titles: set[str] = set()
+    excluded_tags: set[str] = set()
+    cleaned = query
+
+    # 构建已知书名查找表 + 已知标签集合
+    title_set: set[str] = set()
+    known_tags = _collect_known_tags()
+    for novel in MOCK_NOVELS:
+        t = novel["metadata"]["title"]
+        title_set.add(t)
+
+    # --- 标签排除: 检测 不TAG / 非TAG / 不要TAG 模式 ---
+    # 按标签长度降序排列，优先匹配长标签（避免 "后宫" 误匹配 "后宫言情" 的一部分）
+    for tag in sorted(known_tags, key=len, reverse=True):
+        for prefix in ["不要", "不看", "别推", "不推荐", "不", "非"]:
+            negation = prefix + tag
+            if negation in cleaned:
+                excluded_tags.add(tag)
+                cleaned = cleaned.replace(negation, " ")
+                break
+
+    # --- 书名排除 ---
+    for pattern in exclude_phrases:
+        for match in re.finditer(pattern, cleaned):
+            matched_text = match.group()
+            # 尝试从匹配文本中提取书名
+            # 去掉排除前缀
+            for prefix in ["注意：不要", "注意:不要", "注意不要", "注意：别", "注意:别",
+                          "注意别", "不要推荐", "不要", "别推荐", "别推", "除了",
+                          "不包括", "去掉", "排除", "不看"]:
+                if matched_text.startswith(prefix):
+                    candidate = matched_text[len(prefix):]
+                    break
+            else:
+                candidate = matched_text
+
+            if not candidate:
+                continue
+
+            # 清理尾部：去掉"以外"、"之外"、标点
+            candidate = candidate.rstrip("以外之外，,。.！!？?；;：:、的了吧吗呢啊")
+            if not candidate:
+                continue
+
+            # 在已知书名中做 LCS 匹配
+            best_match = ""
+            best_len = 0
+            for title in title_set:
+                lcs = _longest_common_substring(candidate, title)
+                # 要求至少匹配 2 字且覆盖 candidate 的 50% 以上
+                if lcs >= 2 and lcs >= len(candidate) * 0.5 and lcs > best_len:
+                    best_match = title
+                    best_len = lcs
+
+            if best_match and best_match not in excluded_titles:
+                excluded_titles.add(best_match)
+
+    # 清理查询：移除排除短语
+    for phrase in exclude_phrases:
+        cleaned = re.sub(phrase, "", cleaned)
+
+    # 清理多余空格和标点
+    cleaned = re.sub(r"\s+", " ", cleaned).strip()
+    cleaned = re.sub(r"[，,]+$", "", cleaned).strip()
+
+    return cleaned, excluded_titles, excluded_tags
+
+
 @app.post("/api/v1/search/semantic")
 async def semantic_search(request: SearchRequest):
-    """语义搜索 + 避雷过滤 (Mock)。"""
-    query_lower = request.query.lower()
+    """语义搜索 + 避雷过滤 (Mock)，支持多轮对话指代解析。"""
+    # 多轮对话：解析指代表达式（第一本→具体书名）
+    resolved_query = _resolve_session_references(request.query, request.session_id)
+    query_lower = resolved_query.lower()
     safe_tags_lower = [t.lower() for t in request.safe_tags]
+
+    # 解析用户期望的推荐数量（排除"第X本"序数指代）
+    _cn_num = {"一":1,"二":2,"两":2,"三":3,"四":4,"五":5,"六":6,"七":7,"八":8,"九":9,"十":10}
+    effective_top_k = request.top_k
+    import re as _re
+    for m in _re.finditer(r"(?:^|[^第])([一二两三四五六七八九十\d]+)\s*[本部门篇个]", query_lower):
+        ns = m.group(1)
+        if ns.isdigit():
+            n = int(ns)
+        else:
+            n = _cn_num.get(ns, 0)
+        if n >= 1:
+            effective_top_k = min(n, request.top_k)
+            break
+
+    # 解析排除条件
+    cleaned_query, excluded_titles, excluded_tags = _parse_exclusions(query_lower)
+    if excluded_titles:
+        print(f"[semantic_search] Excluded titles: {excluded_titles}")
+    if excluded_tags:
+        print(f"[semantic_search] Excluded tags: {excluded_tags}")
 
     # 检查是否为泛查询（无明确主题关键词）
     generic_patterns = [
@@ -438,10 +600,28 @@ async def semantic_search(request: SearchRequest):
 
     results = []
     for novel in MOCK_NOVELS:
+        title = novel["metadata"]["title"]
+
+        # 跳过被排除的书
+        if title in excluded_titles:
+            continue
+
         tags_str = " ".join(novel.get("tags", [])).lower()
+        novel_tags = [t.lower() for t in novel.get("tags", [])]
+
+        # 跳过包含排除标签的书
+        tag_blocked = False
+        for extag in excluded_tags:
+            if extag.lower() in novel_tags:
+                tag_blocked = True
+                break
+        if tag_blocked:
+            continue
+
         heat = novel.get("heat_score", 0)
 
-        relevance, match_reason, is_title_match = _calculate_relevance(novel, query_lower)
+        # 用清理后的查询计算相关度
+        relevance, match_reason, is_title_match = _calculate_relevance(novel, cleaned_query)
 
         # 泛查询时：用热度 + 随机作为排序依据（但标题匹配的书不随机）
         if is_generic and not is_title_match and relevance <= 0.50:
@@ -496,11 +676,24 @@ async def semantic_search(request: SearchRequest):
 
     # 按相关度降序
     results.sort(key=lambda r: r["relevance_score"], reverse=True)
-    results = results[:request.top_k]
+    results = results[:effective_top_k]
+
+    # 保存本次搜索的书名到会话，供下一轮指代解析
+    if request.session_id:
+        _search_sessions[request.session_id] = [
+            r["metadata"]["title"] for r in results if r["metadata"].get("title")
+        ]
+
+    # 构建查询改写，体现数量限制和指代解析
+    rewrite_parts = [f"解析后的查询意图: {request.query}"]
+    if resolved_query != request.query:
+        rewrite_parts.append(f"(指代解析: {resolved_query})")
+    if effective_top_k != request.top_k:
+        rewrite_parts.append(f"(已识别数量限制: {effective_top_k}本)")
 
     return {
         "results": results,
-        "query_rewrite": f"解析后的查询意图: {request.query}",
+        "query_rewrite": " ".join(rewrite_parts),
         "total_hits": len(results),
     }
 
