@@ -1,0 +1,1052 @@
+{
+  "book": "斗罗大陆",
+  "review_count": 51,
+  "agent_used": true,
+  "analysis_method": "agent",
+  "agent_batches": 9,
+  "heuristic_batches": 0,
+  "ratio": {
+    "positive": 0.2745,
+    "neutral": 0.2745,
+    "negative": 0.451
+  },
+  "counts": {
+    "positive": 14,
+    "negative": 23,
+    "neutral": 14
+  },
+  "average_scores": {
+    "writing": 5.37,
+    "logic": 5.02,
+    "update_speed": 5.16,
+    "sentiment": -0.04
+  },
+  "platform_breakdown": {
+    "douban": {
+      "positive": 11,
+      "neutral": 4,
+      "negative": 10,
+      "total": 25
+    },
+    "tieba": {
+      "positive": 3,
+      "neutral": 10,
+      "negative": 13,
+      "total": 26
+    }
+  },
+  "top_tags": [
+    {
+      "tag": "玄幻",
+      "count": 13
+    },
+    {
+      "tag": "成长",
+      "count": 5
+    },
+    {
+      "tag": "人物塑造差",
+      "count": 5
+    },
+    {
+      "tag": "剧情讨论",
+      "count": 5
+    },
+    {
+      "tag": "人物",
+      "count": 4
+    },
+    {
+      "tag": "剧情不合理",
+      "count": 4
+    },
+    {
+      "tag": "剧情分析",
+      "count": 4
+    },
+    {
+      "tag": "爱情",
+      "count": 3
+    },
+    {
+      "tag": "网络文学",
+      "count": 2
+    },
+    {
+      "tag": "想象力",
+      "count": 2
+    }
+  ],
+  "verdict": "负面声量偏高，建议重点核查低分评论里的共同雷点。",
+  "items": [
+    {
+      "review_id": "douban-7489f042c263",
+      "platform": "douban",
+      "title": "我还是比较喜欢斗罗大陆",
+      "source_url": "https://book.douban.com/review/2325405/",
+      "sentiment": "positive",
+      "sentiment_score": 0.8,
+      "writing_score": 7.0,
+      "logic_score": 7.0,
+      "update_speed_score": 7.0,
+      "one_liner": "情感丰富，人物塑造鲜明，值得一读。",
+      "entry_reason": "喜欢主角的成长历程和深厚的情感描写。",
+      "tags": [
+        "玄幻",
+        "成长",
+        "情感",
+        "励志"
+      ],
+      "evidence": "主人公唐三在历练中展现出的亲情、爱情和友情是人格的亮点。"
+    },
+    {
+      "review_id": "douban-f5ca5078cb12",
+      "platform": "douban",
+      "title": "想象力是个不容置疑的能力",
+      "source_url": "https://book.douban.com/review/5815067/",
+      "sentiment": "positive",
+      "sentiment_score": 0.7,
+      "writing_score": 6.0,
+      "logic_score": 6.0,
+      "update_speed_score": 6.0,
+      "one_liner": "想象力丰富，但文字功底一般。",
+      "entry_reason": "对作者勤勉码字和丰富的想象力表示佩服。",
+      "tags": [
+        "网络文学",
+        "想象力",
+        "创造力",
+        "连载"
+      ],
+      "evidence": "作者勤勉码字，作品想象力丰富。"
+    },
+    {
+      "review_id": "douban-b982ca6e6ed8",
+      "platform": "douban",
+      "title": "有爱的大陆",
+      "source_url": "https://book.douban.com/review/2871192/",
+      "sentiment": "positive",
+      "sentiment_score": 0.6,
+      "writing_score": 5.0,
+      "logic_score": 5.0,
+      "update_speed_score": 5.0,
+      "one_liner": "情感主题突出，但文学性不足。",
+      "entry_reason": "喜欢书中对爱的描写。",
+      "tags": [
+        "网络文学",
+        "小白文",
+        "玄幻",
+        "爱情"
+      ],
+      "evidence": "主人公唐三在修炼过程中，爱是鼓励他的动力。"
+    },
+    {
+      "review_id": "douban-bbe5c8117de5",
+      "platform": "douban",
+      "title": "意料之外的垃圾",
+      "source_url": "https://book.douban.com/review/6554181/",
+      "sentiment": "negative",
+      "sentiment_score": -0.9,
+      "writing_score": 3.0,
+      "logic_score": 3.0,
+      "update_speed_score": 3.0,
+      "one_liner": "文字粗糙，缺乏文学性。",
+      "entry_reason": "对作品的质量和定价表示不满。",
+      "tags": [
+        "玄幻",
+        "流水账",
+        "商业利益"
+      ],
+      "evidence": "作品文字粗糙，缺乏思想性和文学性。"
+    },
+    {
+      "review_id": "douban-41c4dffcc26d",
+      "platform": "douban",
+      "title": "游戏升级般的写法 多巴胺的巨大满足",
+      "source_url": "https://book.douban.com/review/12508811/",
+      "sentiment": "negative",
+      "sentiment_score": -0.8,
+      "writing_score": 4.0,
+      "logic_score": 4.0,
+      "update_speed_score": 4.0,
+      "one_liner": "故事结构简单，缺乏深度。",
+      "entry_reason": "对作品的结构和深度表示失望。",
+      "tags": [
+        "玄幻",
+        "游戏化",
+        "战斗",
+        "浅薄"
+      ],
+      "evidence": "作品结构简单，世界观和人物逻辑常难自洽。"
+    },
+    {
+      "review_id": "douban-345fe62a9068",
+      "platform": "douban",
+      "title": "斗罗大陆520",
+      "source_url": "https://book.douban.com/review/2179466/",
+      "sentiment": "neutral",
+      "sentiment_score": 0.5,
+      "writing_score": 5.0,
+      "logic_score": 5.0,
+      "update_speed_score": 5.0,
+      "one_liner": "简介信息，未涉及评价。",
+      "entry_reason": "提供作品基本信息。",
+      "tags": [
+        "玄幻",
+        "连载",
+        "武魂",
+        "魂师"
+      ],
+      "evidence": "简介信息，未涉及评价。"
+    },
+    {
+      "review_id": "douban-945c280cacd5",
+      "platform": "douban",
+      "title": "碰巧上当了",
+      "source_url": "https://book.douban.com/review/2149544/",
+      "sentiment": "positive",
+      "sentiment_score": 0.8,
+      "writing_score": 6.0,
+      "logic_score": 5.0,
+      "update_speed_score": 5.0,
+      "one_liner": "剧情引人入胜，人物形象鲜明。",
+      "entry_reason": "喜欢玄幻题材，被书名吸引。",
+      "tags": [
+        "玄幻",
+        "成长",
+        "冒险"
+      ],
+      "evidence": "作者文笔流畅，人物塑造生动，剧情跌宕起伏。"
+    },
+    {
+      "review_id": "douban-59ed479b62a3",
+      "platform": "douban",
+      "title": "唐家三少是文化界的悲哀",
+      "source_url": "https://book.douban.com/review/13294685/",
+      "sentiment": "negative",
+      "sentiment_score": -0.7,
+      "writing_score": 3.0,
+      "logic_score": 4.0,
+      "update_speed_score": 5.0,
+      "one_liner": "文笔粗糙，剧情枯燥。",
+      "entry_reason": "看过动画后想看原著。",
+      "tags": [
+        "玄幻",
+        "文化",
+        "失望"
+      ],
+      "evidence": "作者文笔和剧情都存在问题，令人失望。"
+    },
+    {
+      "review_id": "douban-ac304d3b66e2",
+      "platform": "douban",
+      "title": "失去灵魂的书籍",
+      "source_url": "https://book.douban.com/review/3009695/",
+      "sentiment": "negative",
+      "sentiment_score": -0.6,
+      "writing_score": 4.0,
+      "logic_score": 5.0,
+      "update_speed_score": 5.0,
+      "one_liner": "虎头蛇尾，后半部分平淡无奇。",
+      "entry_reason": "看过其他作品后想看这部。",
+      "tags": [
+        "玄幻",
+        "虎头蛇尾",
+        "失望"
+      ],
+      "evidence": "作品前后部分质量不一致，令人失望。"
+    },
+    {
+      "review_id": "douban-58437e88ec96",
+      "platform": "douban",
+      "title": "小读者浅谈唐家三少！",
+      "source_url": "https://book.douban.com/review/2871156/",
+      "sentiment": "positive",
+      "sentiment_score": 0.9,
+      "writing_score": 7.0,
+      "logic_score": 6.0,
+      "update_speed_score": 6.0,
+      "one_liner": "文笔简朴，故事流畅。",
+      "entry_reason": "喜欢三少的风格。",
+      "tags": [
+        "玄幻",
+        "创新",
+        "共鸣"
+      ],
+      "evidence": "作品文笔流畅，故事创新，引发共鸣。"
+    },
+    {
+      "review_id": "douban-78455572e346",
+      "platform": "douban",
+      "title": "致童年白月光—穆大的斗罗大陆",
+      "source_url": "https://book.douban.com/review/14949180/",
+      "sentiment": "positive",
+      "sentiment_score": 0.9,
+      "writing_score": 7.0,
+      "logic_score": 6.0,
+      "update_speed_score": 6.0,
+      "one_liner": "人物形象鲜明，故事感人。",
+      "entry_reason": "喜欢三少的作品。",
+      "tags": [
+        "玄幻",
+        "人物",
+        "童年"
+      ],
+      "evidence": "作品人物形象鲜明，故事感人，令人难忘。"
+    },
+    {
+      "review_id": "douban-ac0979427b51",
+      "platform": "douban",
+      "title": "千遍一律的男主",
+      "source_url": "https://book.douban.com/review/6755643/",
+      "sentiment": "negative",
+      "sentiment_score": -0.8,
+      "writing_score": 5.0,
+      "logic_score": 5.0,
+      "update_speed_score": 5.0,
+      "one_liner": "主角形象重复，缺乏新意。",
+      "entry_reason": "看过其他作品后想看这部。",
+      "tags": [
+        "玄幻",
+        "主角",
+        "重复"
+      ],
+      "evidence": "作品主角形象重复，缺乏新意。"
+    },
+    {
+      "review_id": "douban-36a98ea718de",
+      "platform": "douban",
+      "title": "以大多数人努力之高，只好拼天赋了——《斗罗大陆》解馋一",
+      "source_url": "https://book.douban.com/review/12928098/",
+      "sentiment": "positive",
+      "sentiment_score": 0.8,
+      "writing_score": 7.0,
+      "logic_score": 7.0,
+      "update_speed_score": 7.0,
+      "one_liner": "《斗罗大陆》以努力与天赋为主题，描绘了一个充满热血与奋斗的玄幻世界。",
+      "entry_reason": "适合喜欢玄幻题材，追求成长与奋斗的读者。",
+      "tags": [
+        "玄幻",
+        "成长",
+        "努力",
+        "天赋"
+      ],
+      "evidence": "作者通过对比现实与玄幻世界的努力与天赋，展现了主角的成长历程。"
+    },
+    {
+      "review_id": "douban-9678fe5391e0",
+      "platform": "douban",
+      "title": "旧里寻梦终不回《斗罗大陆》 William Dragon",
+      "source_url": "https://book.douban.com/review/12531408/",
+      "sentiment": "positive",
+      "sentiment_score": 0.9,
+      "writing_score": 6.0,
+      "logic_score": 6.0,
+      "update_speed_score": 6.0,
+      "one_liner": "《斗罗大陆》唤起了作者对青春的回忆，是一部充满情感的小说。",
+      "entry_reason": "适合怀念青春，寻找成长力量的读者。",
+      "tags": [
+        "回忆",
+        "成长",
+        "友情",
+        "爱情"
+      ],
+      "evidence": "作者通过回忆自己阅读《斗罗大陆》的经历，表达了对友情、亲情和爱情的感悟。"
+    },
+    {
+      "review_id": "douban-0fe8edaeeba8",
+      "platform": "douban",
+      "title": "2019第二本《斗罗大陆》",
+      "source_url": "https://book.douban.com/review/12319588/",
+      "sentiment": "positive",
+      "sentiment_score": 0.7,
+      "writing_score": 5.0,
+      "logic_score": 5.0,
+      "update_speed_score": 5.0,
+      "one_liner": "《斗罗大陆》是一部关于成长、努力和爱情的小说，让人思考人生的意义。",
+      "entry_reason": "适合思考人生，追求成长的读者。",
+      "tags": [
+        "成长",
+        "努力",
+        "爱情",
+        "人生"
+      ],
+      "evidence": "作者通过阅读《斗罗大陆》的经历，反思了人生的意义和价值。"
+    },
+    {
+      "review_id": "douban-a7a5fb367910",
+      "platform": "douban",
+      "title": "前期还可以，后面真的烂尾",
+      "source_url": "https://book.douban.com/review/10053233/",
+      "sentiment": "negative",
+      "sentiment_score": -0.5,
+      "writing_score": 4.0,
+      "logic_score": 3.0,
+      "update_speed_score": 4.0,
+      "one_liner": "《斗罗大陆》前期不错，但后期烂尾，人物塑造和剧情逻辑都有问题。",
+      "entry_reason": "适合喜欢完整剧情和人物塑造的读者。",
+      "tags": [
+        "烂尾",
+        "剧情崩坏",
+        "人物塑造"
+      ],
+      "evidence": "作者指出《斗罗大陆》后期剧情逻辑混乱，人物塑造不完整。"
+    },
+    {
+      "review_id": "douban-7468f85fbf72",
+      "platform": "douban",
+      "title": "关于小舞，你们怎么看(与小舞和故事主副线的情节分配)",
+      "source_url": "https://book.douban.com/review/9577647/",
+      "sentiment": "negative",
+      "sentiment_score": -0.6,
+      "writing_score": 4.0,
+      "logic_score": 3.0,
+      "update_speed_score": 4.0,
+      "one_liner": "《斗罗大陆》剧情混乱，人物塑造不成功，爱情线过于矫情。",
+      "entry_reason": "适合喜欢剧情逻辑和人物塑造的读者。",
+      "tags": [
+        "剧情混乱",
+        "人物塑造",
+        "爱情线"
+      ],
+      "evidence": "作者指出《斗罗大陆》剧情逻辑混乱，人物塑造不成功，爱情线过于矫情。"
+    },
+    {
+      "review_id": "douban-4cbe6df46390",
+      "platform": "douban",
+      "title": "穿越的唐家三少",
+      "source_url": "https://book.douban.com/review/4639296/",
+      "sentiment": "neutral",
+      "sentiment_score": 0.5,
+      "writing_score": 5.0,
+      "logic_score": 5.0,
+      "update_speed_score": 5.0,
+      "one_liner": "《斗罗大陆》讲述了唐三穿越到斗罗大陆的故事。",
+      "entry_reason": "适合喜欢穿越和玄幻题材的读者。",
+      "tags": [
+        "穿越",
+        "玄幻",
+        "唐门"
+      ],
+      "evidence": "作者简要介绍了《斗罗大陆》的故事背景和主要人物。"
+    },
+    {
+      "review_id": "douban-a807e4d20510",
+      "platform": "douban",
+      "title": "我觉得写的好烂?",
+      "source_url": "https://book.douban.com/review/15662849/",
+      "sentiment": "negative",
+      "sentiment_score": -0.5,
+      "writing_score": 5.0,
+      "logic_score": 4.0,
+      "update_speed_score": 5.0,
+      "one_liner": "剧情逻辑存在问题，人物行为缺乏深度。",
+      "entry_reason": "故事完整度较高，但缺乏深度思考。",
+      "tags": [
+        "剧情",
+        "人物",
+        "世界观"
+      ],
+      "evidence": "唐三的行为缺乏逻辑，对世界的理解过于简单。"
+    },
+    {
+      "review_id": "douban-63efb66076d9",
+      "platform": "douban",
+      "title": "斗罗大陆 | 你想要的词云、人物榜、战斗图都在这儿",
+      "source_url": "https://book.douban.com/review/14084427/",
+      "sentiment": "neutral",
+      "sentiment_score": 0.0,
+      "writing_score": 6.0,
+      "logic_score": 6.0,
+      "update_speed_score": 6.0,
+      "one_liner": "详细介绍了人物和世界观，但缺乏个人情感评价。",
+      "entry_reason": "对人物和世界观有详细介绍，适合对背景感兴趣的读者。",
+      "tags": [
+        "人物",
+        "世界观",
+        "修炼体系"
+      ],
+      "evidence": "对人物和修炼体系有详细描述。"
+    },
+    {
+      "review_id": "douban-40d25090cf30",
+      "platform": "douban",
+      "title": "开创一个系列",
+      "source_url": "https://book.douban.com/review/14059050/",
+      "sentiment": "positive",
+      "sentiment_score": 0.7,
+      "writing_score": 7.0,
+      "logic_score": 7.0,
+      "update_speed_score": 7.0,
+      "one_liner": "想象力丰富，人物刻画细腻。",
+      "entry_reason": "对剧情和人物有深入理解，适合喜欢深度阅读的读者。",
+      "tags": [
+        "剧情",
+        "人物",
+        "想象力"
+      ],
+      "evidence": "对剧情和人物有深入分析，对想象力表示赞赏。"
+    },
+    {
+      "review_id": "douban-79314ddd1d68",
+      "platform": "douban",
+      "title": "经典之作",
+      "source_url": "https://book.douban.com/review/13545394/",
+      "sentiment": "positive",
+      "sentiment_score": 0.8,
+      "writing_score": 6.0,
+      "logic_score": 6.0,
+      "update_speed_score": 6.0,
+      "one_liner": "从IP运营角度分析，推荐观看顺序。",
+      "entry_reason": "从IP运营角度分析，提供观看建议。",
+      "tags": [
+        "IP运营",
+        "改编",
+        "观看顺序"
+      ],
+      "evidence": "从IP运营角度分析，推荐观看顺序。"
+    },
+    {
+      "review_id": "douban-e06ee8ccda58",
+      "platform": "douban",
+      "title": "网文",
+      "source_url": "https://book.douban.com/review/12206460/",
+      "sentiment": "negative",
+      "sentiment_score": -0.3,
+      "writing_score": 5.0,
+      "logic_score": 5.0,
+      "update_speed_score": 5.0,
+      "one_liner": "文笔一般，文学性不足。",
+      "entry_reason": "认为文笔和文学性不足，适合追求文学性的读者。",
+      "tags": [
+        "文笔",
+        "文学性",
+        "网文"
+      ],
+      "evidence": "认为文笔和文学性不足，适合追求文学性的读者。"
+    },
+    {
+      "review_id": "douban-218020f88e8c",
+      "platform": "douban",
+      "title": "从IP运营角度出发分析斗罗的衍生产业链",
+      "source_url": "https://book.douban.com/review/10406198/",
+      "sentiment": "neutral",
+      "sentiment_score": 0.0,
+      "writing_score": 6.0,
+      "logic_score": 6.0,
+      "update_speed_score": 6.0,
+      "one_liner": "从IP运营角度分析，讨论改编和产业链。",
+      "entry_reason": "从IP运营角度分析，讨论改编和产业链。",
+      "tags": [
+        "IP运营",
+        "改编",
+        "产业链"
+      ],
+      "evidence": "从IP运营角度分析，讨论改编和产业链。"
+    },
+    {
+      "review_id": "douban-b46319313378",
+      "platform": "douban",
+      "title": "想了好久，还是想吐槽一下，忍不了",
+      "source_url": "https://book.douban.com/review/10094958/",
+      "sentiment": "negative",
+      "sentiment_score": -0.8,
+      "writing_score": 4.0,
+      "logic_score": 3.0,
+      "update_speed_score": 5.0,
+      "one_liner": "剧情转折生硬，人物塑造单薄，文笔一般。",
+      "entry_reason": "对角色设定和剧情发展不满。",
+      "tags": [
+        "剧情不合理",
+        "人物塑造差",
+        "文笔一般"
+      ],
+      "evidence": "剧情转折生硬，人物塑造单薄。"
+    },
+    {
+      "review_id": "tieba-d322c97aa022",
+      "platform": "tieba",
+      "title": "【吧内投诉通道】此贴长期有效",
+      "source_url": "https://tieba.baidu.com/p/6627095988?pid=132707816643#pid132707816643",
+      "sentiment": "negative",
+      "sentiment_score": -0.9,
+      "writing_score": 5.0,
+      "logic_score": 4.0,
+      "update_speed_score": 5.0,
+      "one_liner": "三观不正，剧情无逻辑，人物塑造差。",
+      "entry_reason": "对作者的三观和剧情逻辑不满。",
+      "tags": [
+        "三观不正",
+        "剧情无逻辑",
+        "人物塑造差"
+      ],
+      "evidence": "三观不正，剧情无逻辑，人物塑造差。"
+    },
+    {
+      "review_id": "tieba-374bd957262f",
+      "platform": "tieba",
+      "title": "斗二唐门被灭门是不是挺扯的",
+      "source_url": "https://tieba.baidu.com/p/10754006889?pid=153570217420#pid153570217420",
+      "sentiment": "negative",
+      "sentiment_score": -0.7,
+      "writing_score": 5.0,
+      "logic_score": 3.0,
+      "update_speed_score": 5.0,
+      "one_liner": "剧情不合理，人物塑造差，逻辑漏洞。",
+      "entry_reason": "对剧情逻辑和人物塑造不满。",
+      "tags": [
+        "剧情不合理",
+        "人物塑造差",
+        "逻辑漏洞"
+      ],
+      "evidence": "剧情不合理，人物塑造差，逻辑漏洞。"
+    },
+    {
+      "review_id": "tieba-7e2e78dd05ac",
+      "platform": "tieba",
+      "title": "斗二唐门被灭门是不是挺扯的",
+      "source_url": "https://tieba.baidu.com/p/10754006889?pid=153571010113#pid153571010113",
+      "sentiment": "negative",
+      "sentiment_score": -0.6,
+      "writing_score": 5.0,
+      "logic_score": 3.0,
+      "update_speed_score": 5.0,
+      "one_liner": "剧情不合理，人物塑造差，逻辑漏洞。",
+      "entry_reason": "对剧情逻辑和人物塑造不满。",
+      "tags": [
+        "剧情不合理",
+        "人物塑造差",
+        "逻辑漏洞"
+      ],
+      "evidence": "剧情不合理，人物塑造差，逻辑漏洞。"
+    },
+    {
+      "review_id": "tieba-c929e0a9d928",
+      "platform": "tieba",
+      "title": "虐浩到底是不是因为唐门雨浩金主跑路？",
+      "source_url": "https://tieba.baidu.com/p/10754392644?pid=153570769290#pid153570769290",
+      "sentiment": "negative",
+      "sentiment_score": -0.8,
+      "writing_score": 5.0,
+      "logic_score": 5.0,
+      "update_speed_score": 5.0,
+      "one_liner": "剧情不合理，人物塑造差，更新不稳定。",
+      "entry_reason": "对剧情逻辑和更新不稳定不满。",
+      "tags": [
+        "剧情不合理",
+        "人物塑造差",
+        "更新不稳定"
+      ],
+      "evidence": "剧情不合理，人物塑造差，更新不稳定。"
+    },
+    {
+      "review_id": "tieba-0ddd20d23610",
+      "platform": "tieba",
+      "title": "看斗罗一直以来对神界这一设定的疑惑",
+      "source_url": "https://tieba.baidu.com/p/10754550502?pid=153570987007#pid153570987007",
+      "sentiment": "neutral",
+      "sentiment_score": 0.2,
+      "writing_score": 5.0,
+      "logic_score": 5.0,
+      "update_speed_score": 5.0,
+      "one_liner": "对神界设定有疑惑，探讨世界观。",
+      "entry_reason": "对小说设定和世界观有疑问。",
+      "tags": [
+        "设定疑惑",
+        "世界观探讨"
+      ],
+      "evidence": "对神界设定有疑惑，探讨世界观。"
+    },
+    {
+      "review_id": "tieba-16114024b5fb",
+      "platform": "tieba",
+      "title": "原文说过金龙公主比她妈漂亮吗？就直接说咸鱼比古月娜美",
+      "source_url": "https://tieba.baidu.com/p/10752142437?pid=153568314954#pid153568314954",
+      "sentiment": "negative",
+      "sentiment_score": -0.5,
+      "writing_score": 5.0,
+      "logic_score": 5.0,
+      "update_speed_score": 5.0,
+      "one_liner": "角色争议不断，解读带有主观色彩。",
+      "entry_reason": "对角色争议和解读感兴趣。",
+      "tags": [
+        "角色争议",
+        "断章取义",
+        "主观解读"
+      ],
+      "evidence": "断章取义，主观解读"
+    },
+    {
+      "review_id": "tieba-5bf32eac2338",
+      "platform": "tieba",
+      "title": "原文说过金龙公主比她妈漂亮吗？就直接说咸鱼比古月娜美",
+      "source_url": "https://tieba.baidu.com/p/10752142437?pid=153570432681#pid153570432681",
+      "sentiment": "neutral",
+      "sentiment_score": 0.0,
+      "writing_score": 5.0,
+      "logic_score": 5.0,
+      "update_speed_score": 5.0,
+      "one_liner": "对男女主颜值进行排名，评价女主。",
+      "entry_reason": "对角色颜值排名感兴趣。",
+      "tags": [
+        "颜值排名",
+        "女主评价"
+      ],
+      "evidence": "颜值排名，女主评价"
+    },
+    {
+      "review_id": "tieba-eef6d688c329",
+      "platform": "tieba",
+      "title": "我突然发现古月娜的行为好离谱啊",
+      "source_url": "https://tieba.baidu.com/p/10714090118?pid=153515470976#pid153515470976",
+      "sentiment": "negative",
+      "sentiment_score": -0.5,
+      "writing_score": 5.0,
+      "logic_score": 5.0,
+      "update_speed_score": 5.0,
+      "one_liner": "分析角色行为，指出恶意解读。",
+      "entry_reason": "对角色行为和恶意解读感兴趣。",
+      "tags": [
+        "角色行为",
+        "剧情分析",
+        "恶意解读"
+      ],
+      "evidence": "角色行为分析，恶意解读"
+    },
+    {
+      "review_id": "tieba-82151c855eeb",
+      "platform": "tieba",
+      "title": "我突然发现古月娜的行为好离谱啊",
+      "source_url": "https://tieba.baidu.com/p/10714090118?pid=153571458605#pid153571458605",
+      "sentiment": "negative",
+      "sentiment_score": -0.5,
+      "writing_score": 5.0,
+      "logic_score": 5.0,
+      "update_speed_score": 5.0,
+      "one_liner": "分析剧情，指出恶意解读。",
+      "entry_reason": "对剧情分析和恶意解读感兴趣。",
+      "tags": [
+        "剧情分析",
+        "人类与魂兽关系",
+        "恶意解读"
+      ],
+      "evidence": "剧情分析，恶意解读"
+    },
+    {
+      "review_id": "tieba-29f880822c27",
+      "platform": "tieba",
+      "title": "论第三部帝天是怎么被传灵塔打趴下的",
+      "source_url": "https://tieba.baidu.com/p/10475016747?pid=153184504082#pid153184504082",
+      "sentiment": "negative",
+      "sentiment_score": -0.5,
+      "writing_score": 5.0,
+      "logic_score": 5.0,
+      "update_speed_score": 5.0,
+      "one_liner": "分析战力，对比传灵塔与星斗。",
+      "entry_reason": "对战力分析和战力对比感兴趣。",
+      "tags": [
+        "战力分析",
+        "传灵塔与星斗",
+        "战力对比"
+      ],
+      "evidence": "战力分析，战力对比"
+    },
+    {
+      "review_id": "tieba-c3bd74dc88f0",
+      "platform": "tieba",
+      "title": "论第三部帝天是怎么被传灵塔打趴下的",
+      "source_url": "https://tieba.baidu.com/p/10475016747?pid=153184828035#pid153184828035",
+      "sentiment": "negative",
+      "sentiment_score": -0.5,
+      "writing_score": 5.0,
+      "logic_score": 5.0,
+      "update_speed_score": 5.0,
+      "one_liner": "分析深渊位面和准神强者，对比实力。",
+      "entry_reason": "对深渊位面和实力对比感兴趣。",
+      "tags": [
+        "深渊位面",
+        "准神强者",
+        "实力对比"
+      ],
+      "evidence": "深渊位面分析，实力对比"
+    },
+    {
+      "review_id": "tieba-65caea443085",
+      "platform": "tieba",
+      "title": "这三人排名是什么",
+      "source_url": "https://tieba.baidu.com/p/10754285944?pid=153570863352#pid153570863352",
+      "sentiment": "neutral",
+      "sentiment_score": 0.0,
+      "writing_score": 6.0,
+      "logic_score": 5.0,
+      "update_speed_score": 5.0,
+      "one_liner": "分析角色战斗力，讨论剧情设定。",
+      "entry_reason": "对角色实力和剧情设定有深入思考。",
+      "tags": [
+        "战斗力分析",
+        "角色对比",
+        "剧情讨论"
+      ],
+      "evidence": "分析燃命陈、云冥、帝天的战斗力对比。"
+    },
+    {
+      "review_id": "tieba-1e355bde0ccd",
+      "platform": "tieba",
+      "title": "这三人排名是什么",
+      "source_url": "https://tieba.baidu.com/p/10754285944?pid=153570945017#pid153570945017",
+      "sentiment": "neutral",
+      "sentiment_score": 0.0,
+      "writing_score": 6.0,
+      "logic_score": 5.0,
+      "update_speed_score": 5.0,
+      "one_liner": "讨论帝天角色成长与战斗力。",
+      "entry_reason": "对角色成长和战斗力提升有独到见解。",
+      "tags": [
+        "角色成长",
+        "战斗力分析",
+        "剧情讨论"
+      ],
+      "evidence": "分析帝天在小说中的成长和战斗力变化。"
+    },
+    {
+      "review_id": "tieba-80c4dbe861dd",
+      "platform": "tieba",
+      "title": "物理学不存在了",
+      "source_url": "https://tieba.baidu.com/p/10750055060?pid=153567362564#pid153567362564",
+      "sentiment": "negative",
+      "sentiment_score": -0.5,
+      "writing_score": 7.0,
+      "logic_score": 4.0,
+      "update_speed_score": 5.0,
+      "one_liner": "指出小说中物理逻辑错误。",
+      "entry_reason": "对小说中的物理逻辑有深入分析。",
+      "tags": [
+        "物理逻辑",
+        "剧情分析",
+        "科学性讨论"
+      ],
+      "evidence": "分析小说中关于空气阻力和铠甲重量的物理逻辑错误。"
+    },
+    {
+      "review_id": "tieba-a6c30f52a509",
+      "platform": "tieba",
+      "title": "问一下千家",
+      "source_url": "https://tieba.baidu.com/p/10751629969?pid=153567278735#pid153567278735",
+      "sentiment": "neutral",
+      "sentiment_score": 0.0,
+      "writing_score": 6.0,
+      "logic_score": 5.0,
+      "update_speed_score": 5.0,
+      "one_liner": "讨论千家角色背景和家族关系。",
+      "entry_reason": "对角色背景和家族关系有深入理解。",
+      "tags": [
+        "角色背景",
+        "家族关系",
+        "剧情讨论"
+      ],
+      "evidence": "分析千家角色关系和家族设定。"
+    },
+    {
+      "review_id": "tieba-58f2ae34e055",
+      "platform": "tieba",
+      "title": "问一下千家",
+      "source_url": "https://tieba.baidu.com/p/10751629969?pid=153568549887#pid153568549887",
+      "sentiment": "neutral",
+      "sentiment_score": 0.0,
+      "writing_score": 6.0,
+      "logic_score": 5.0,
+      "update_speed_score": 5.0,
+      "one_liner": "澄清千家角色背景和家族关系。",
+      "entry_reason": "对角色背景和家族关系有准确理解。",
+      "tags": [
+        "角色背景",
+        "家族关系",
+        "剧情讨论"
+      ],
+      "evidence": "澄清千家角色背景和家族关系设定。"
+    },
+    {
+      "review_id": "tieba-abf337d41c90",
+      "platform": "tieba",
+      "title": "海魂兽是听唐三的还是龙神或者古月娜的？",
+      "source_url": "https://tieba.baidu.com/p/10754286843?pid=153570607524#pid153570607524",
+      "sentiment": "neutral",
+      "sentiment_score": 0.0,
+      "writing_score": 6.0,
+      "logic_score": 5.0,
+      "update_speed_score": 5.0,
+      "one_liner": "讨论海魂兽的服从关系。",
+      "entry_reason": "对魂兽设定和角色关系有深入思考。",
+      "tags": [
+        "角色关系",
+        "魂兽设定",
+        "剧情讨论"
+      ],
+      "evidence": "分析海魂兽的服从关系和角色设定。"
+    },
+    {
+      "review_id": "tieba-cfd8ac116ffa",
+      "platform": "tieba",
+      "title": "为何朱竹清、宁荣荣这俩前几年同人还很热门的女主现在没那么受待见",
+      "source_url": "https://tieba.baidu.com/p/10741207200?pid=153555513618#pid153555513618",
+      "sentiment": "neutral",
+      "sentiment_score": 0.0,
+      "writing_score": 5.0,
+      "logic_score": 5.0,
+      "update_speed_score": 5.0,
+      "one_liner": "分析朱竹清、宁荣荣角色热度变化的原因。",
+      "entry_reason": "对角色剧情有深入分析。",
+      "tags": [
+        "同人女主",
+        "剧情分析"
+      ],
+      "evidence": "千前期角色作用分析。"
+    },
+    {
+      "review_id": "tieba-f1978bd47c48",
+      "platform": "tieba",
+      "title": "疑问小舞的魂技",
+      "source_url": "https://tieba.baidu.com/p/10752287536?pid=153571315351#pid153571315351",
+      "sentiment": "negative",
+      "sentiment_score": -0.5,
+      "writing_score": 5.0,
+      "logic_score": 4.0,
+      "update_speed_score": 5.0,
+      "one_liner": "指出斗罗大陆后期设定的不合理之处。",
+      "entry_reason": "对后期设定有独到见解。",
+      "tags": [
+        "设定分析",
+        "剧情崩坏"
+      ],
+      "evidence": "小舞复活和魂环设定的逻辑分析。"
+    },
+    {
+      "review_id": "tieba-f509306f2e91",
+      "platform": "tieba",
+      "title": "斗二里喜欢霍雨浩的女孩子好像都比霍雨浩年龄大",
+      "source_url": "https://tieba.baidu.com/p/10746980615?pid=153561012368#pid153561012368",
+      "sentiment": "neutral",
+      "sentiment_score": 0.0,
+      "writing_score": 5.0,
+      "logic_score": 5.0,
+      "update_speed_score": 5.0,
+      "one_liner": "探讨斗罗大陆中霍雨浩受欢迎的女性角色年龄特点。",
+      "entry_reason": "对角色年龄和读者喜好的分析。",
+      "tags": [
+        "角色年龄",
+        "读者喜好"
+      ],
+      "evidence": "列举喜欢霍雨浩的女性角色年龄。"
+    },
+    {
+      "review_id": "tieba-31c80ce61b68",
+      "platform": "tieba",
+      "title": "六翼天使不是神级武魂的论证",
+      "source_url": "https://tieba.baidu.com/p/10751844146?pid=153568567923#pid153568567923",
+      "sentiment": "negative",
+      "sentiment_score": -0.5,
+      "writing_score": 5.0,
+      "logic_score": 4.0,
+      "update_speed_score": 5.0,
+      "one_liner": "讨论六翼天使是否属于神级武魂的问题。",
+      "entry_reason": "对武魂品质的深入探讨。",
+      "tags": [
+        "武魂品质",
+        "设定争议"
+      ],
+      "evidence": "对神级武魂和超级武魂的定义分析。"
+    },
+    {
+      "review_id": "tieba-874c10ce6ed5",
+      "platform": "tieba",
+      "title": "不知道蓝电这个最强兽武魂称号怎么来的，最强辅助和最强器武魂锤子",
+      "source_url": "https://tieba.baidu.com/p/10749335824?pid=153566110802#pid153566110802",
+      "sentiment": "negative",
+      "sentiment_score": -0.5,
+      "writing_score": 5.0,
+      "logic_score": 4.0,
+      "update_speed_score": 5.0,
+      "one_liner": "质疑蓝电作为最强兽武魂称号的合理性。",
+      "entry_reason": "对武魂排名和设定变化的讨论。",
+      "tags": [
+        "武魂排名",
+        "设定变化"
+      ],
+      "evidence": "蓝电武魂在后续作品中的地位分析。"
+    },
+    {
+      "review_id": "tieba-9e10bf418bea",
+      "platform": "tieba",
+      "title": "原文到底有没有写过什么饭桶神界第一美？或者类似描写",
+      "source_url": "https://tieba.baidu.com/p/10742859380?pid=153563474403#pid153563474403",
+      "sentiment": "neutral",
+      "sentiment_score": 0.0,
+      "writing_score": 5.0,
+      "logic_score": 5.0,
+      "update_speed_score": 5.0,
+      "one_liner": "确认斗罗大陆中是否有“饭桶神界第一美”的描写。",
+      "entry_reason": "对角色描写和世界观设定的核实。",
+      "tags": [
+        "角色描写",
+        "世界观设定"
+      ],
+      "evidence": "对角色容貌描述的核实。"
+    },
+    {
+      "review_id": "tieba-9e441e8e11e6",
+      "platform": "tieba",
+      "title": "按描写斗三史莱克和传灵塔交恶属实是太合理了",
+      "source_url": "https://tieba.baidu.com/p/10158704443?pid=152781079151#pid152781079151",
+      "sentiment": "positive",
+      "sentiment_score": 0.8,
+      "writing_score": 7.0,
+      "logic_score": 8.0,
+      "update_speed_score": 5.0,
+      "one_liner": "描写传灵塔与史莱克交恶合情合理，人物刻画生动。",
+      "entry_reason": "喜欢看史莱克与传灵塔之间的冲突。",
+      "tags": [
+        "剧情合理",
+        "人物刻画",
+        "实力展现"
+      ],
+      "evidence": "史莱克在世间简直是灾难，天天无所顾忌踩别人组织官方脸上刷战绩。"
+    },
+    {
+      "review_id": "tieba-43d4a521426d",
+      "platform": "tieba",
+      "title": "按描写斗三史莱克和传灵塔交恶属实是太合理了",
+      "source_url": "https://tieba.baidu.com/p/10158704443?pid=152782163714#pid152782163714",
+      "sentiment": "positive",
+      "sentiment_score": 0.9,
+      "writing_score": 7.0,
+      "logic_score": 8.0,
+      "update_speed_score": 5.0,
+      "one_liner": "史莱克宿老收徒逻辑，恩慈锻造技艺高超。",
+      "entry_reason": "对史莱克学院锻造师协会会长的收徒逻辑和恩慈的锻造技艺感兴趣。",
+      "tags": [
+        "人物关系",
+        "锻造技艺",
+        "实力提升"
+      ],
+      "evidence": "恩慈用了十年时间，以自己的精神力和魂力温养、提炼，硬是把自己的三字斗铠魂核数种稀有金属，最终提升到了四字斗铠的程度。"
+    },
+    {
+      "review_id": "tieba-2f307ca30695",
+      "platform": "tieba",
+      "title": "按描写斗三史莱克和传灵塔交恶属实是太合理了",
+      "source_url": "https://tieba.baidu.com/p/10158704443?pid=152782319894#pid152782319894",
+      "sentiment": "positive",
+      "sentiment_score": 0.7,
+      "writing_score": 6.0,
+      "logic_score": 7.0,
+      "update_speed_score": 5.0,
+      "one_liner": "恩慈为徒弟担保，展现师徒情深。",
+      "entry_reason": "对恩慈为徒弟担保的行为和师徒关系感兴趣。",
+      "tags": [
+        "人物决策",
+        "帝国形象",
+        "师徒关系"
+      ],
+      "evidence": "恩慈离开座位，单膝跪倒在戴天灵面前，恳切的说道。"
+    }
+  ]
+}

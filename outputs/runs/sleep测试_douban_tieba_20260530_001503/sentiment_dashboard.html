@@ -1,0 +1,475 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sentiment Critic 舆情看板</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #18211f;
+      --muted: #66736f;
+      --soft: #8a9792;
+      --line: #dce4e1;
+      --page: #f5f7f7;
+      --panel: #ffffff;
+      --panel-alt: #fbfcfc;
+      --good: #16835f;
+      --mid: #a66a13;
+      --bad: #bd3f49;
+      --accent: #2f6f73;
+      --accent-2: #6d5bd0;
+      --shadow: 0 12px 28px rgba(25, 39, 36, 0.08);
+    }
+    * { box-sizing: border-box; }
+    html { background: var(--page); }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Microsoft YaHei", "PingFang SC", system-ui, sans-serif;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, rgba(47,111,115,0.08), transparent 280px),
+        var(--page);
+    }
+    header {
+      padding: 26px clamp(18px, 4vw, 48px) 22px;
+      background: rgba(255, 255, 255, 0.86);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(10px);
+    }
+    .header-inner {
+      width: min(1180px, 100%);
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 18px;
+      align-items: end;
+    }
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--accent);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    header h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 44px);
+      line-height: 1.15;
+      letter-spacing: 0;
+    }
+    header p {
+      margin: 10px 0 0;
+      color: var(--muted);
+      max-width: 760px;
+      line-height: 1.65;
+    }
+    .summary-strip {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      max-width: 430px;
+    }
+    .summary-chip {
+      min-height: 34px;
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 7px 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #fff;
+      color: #34423f;
+      font-size: 13px;
+      box-shadow: 0 4px 14px rgba(25, 39, 36, 0.05);
+      white-space: nowrap;
+    }
+    .summary-chip strong {
+      color: var(--ink);
+      font-size: 14px;
+    }
+    main {
+      width: min(1180px, calc(100% - 32px));
+      margin: 24px auto 52px;
+      display: grid;
+      gap: 18px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 16px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+    .span-4 { grid-column: span 4; }
+    .span-5 { grid-column: span 5; }
+    .span-7 { grid-column: span 7; }
+    .span-12 { grid-column: span 12; }
+    .metric {
+      display: grid;
+      gap: 10px;
+      min-height: 146px;
+      position: relative;
+      overflow: hidden;
+    }
+    .metric::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto;
+      height: 4px;
+      background: var(--accent);
+    }
+    .metric.positive-card::before { background: var(--good); }
+    .metric.negative-card::before { background: var(--bad); }
+    .metric.verdict-card::before { background: var(--accent-2); }
+    .metric-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+    .metric small {
+      color: var(--muted);
+      font-weight: 700;
+    }
+    .metric strong {
+      font-size: clamp(30px, 5vw, 52px);
+      line-height: 1;
+    }
+    .metric-note {
+      color: var(--soft);
+      font-size: 13px;
+    }
+    .positive { color: var(--good); }
+    .neutral { color: var(--mid); }
+    .negative { color: var(--bad); }
+    .bar {
+      height: 16px;
+      display: flex;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #e7eeec;
+      border: 1px solid var(--line);
+    }
+    .bar span { min-width: 2px; }
+    .bar .positive { background: var(--good); }
+    .bar .neutral { background: #d49b22; }
+    .bar .negative { background: var(--bad); }
+    h2 {
+      margin: 0 0 16px;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+    .section-title {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .section-title span {
+      color: var(--soft);
+      font-size: 13px;
+    }
+    .score-row, .platform-row, .tag-row {
+      display: grid;
+      grid-template-columns: 120px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 0;
+      border-top: 1px solid #edf0f5;
+    }
+    .score-row:first-of-type, .platform-row:first-of-type, .tag-row:first-of-type { border-top: 0; }
+    .track {
+      height: 10px;
+      border-radius: 999px;
+      background: #e9efed;
+      overflow: hidden;
+    }
+    .track i {
+      display: block;
+      height: 100%;
+      width: var(--w);
+      background: linear-gradient(90deg, var(--accent), var(--accent-2));
+      border-radius: inherit;
+    }
+    .platform-row {
+      grid-template-columns: minmax(90px, 130px) 1fr minmax(70px, auto);
+    }
+    .platform-stack {
+      display: flex;
+      height: 13px;
+      overflow: hidden;
+      border-radius: 999px;
+      background: #e9efed;
+    }
+    .platform-stack span { min-width: 2px; }
+    .platform-stack .p { background: var(--good); }
+    .platform-stack .n { background: #d49b22; }
+    .platform-stack .b { background: var(--bad); }
+    .tag-cloud {
+      display: flex;
+      gap: 9px;
+      flex-wrap: wrap;
+    }
+    .tag {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 7px 11px;
+      color: #263532;
+      background: var(--panel-alt);
+      font-size: 13px;
+      font-weight: 650;
+    }
+    table {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      table-layout: fixed;
+    }
+    th, td {
+      padding: 13px 12px;
+      border-top: 1px solid #e8efed;
+      text-align: left;
+      vertical-align: top;
+      line-height: 1.55;
+      word-break: break-word;
+    }
+    th {
+      color: var(--muted);
+      font-size: 13px;
+      border-top: 0;
+      background: #f7f9f8;
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+    tbody tr:hover td {
+      background: #fbfcfc;
+    }
+    td small {
+      color: var(--soft);
+    }
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 26px;
+      border-radius: 999px;
+      padding: 2px 10px;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .pill.positive { background: var(--good); color: #fff; }
+    .pill.neutral { background: #b17b13; color: #fff; }
+    .pill.negative { background: var(--bad); color: #fff; }
+    .verdict {
+      font-size: 17px;
+      line-height: 1.7;
+      margin: 0;
+      color: #273532;
+    }
+    .review-table-wrap {
+      overflow-x: auto;
+      border: 1px solid #e8efed;
+      border-radius: 8px;
+    }
+    @media (max-width: 860px) {
+      .header-inner { grid-template-columns: 1fr; }
+      .summary-strip { justify-content: flex-start; }
+      .grid { grid-template-columns: 1fr; }
+      .span-4, .span-5, .span-7, .span-12 { grid-column: 1; }
+      .score-row, .platform-row, .tag-row { grid-template-columns: 1fr; gap: 8px; }
+      table, thead, tbody, th, td, tr { display: block; }
+      thead { display: none; }
+      tr { border-top: 1px solid #e8efed; padding: 12px; }
+      tr:first-child { border-top: 0; }
+      td { border-top: 0; padding: 6px 0; }
+      td::before {
+        content: attr(data-label);
+        display: block;
+        color: var(--muted);
+        font-size: 12px;
+        font-weight: 700;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div>
+        <p class="eyebrow">Sentiment Critic</p>
+        <h1 id="title">舆情看板</h1>
+        <p id="subtitle"></p>
+      </div>
+      <div class="summary-strip" id="summary-strip"></div>
+    </div>
+  </header>
+  <main>
+    <section class="grid">
+      <div class="panel metric positive-card span-4">
+        <div class="metric-head">
+          <small>正面评论</small>
+          <span class="metric-note" id="positive-count"></span>
+        </div>
+        <strong class="positive" id="positive-ratio">0%</strong>
+        <div class="bar" aria-label="正负评论比">
+          <span class="positive" id="bar-positive"></span>
+          <span class="neutral" id="bar-neutral"></span>
+          <span class="negative" id="bar-negative"></span>
+        </div>
+      </div>
+      <div class="panel metric negative-card span-4">
+        <div class="metric-head">
+          <small>负面评论</small>
+          <span class="metric-note" id="negative-count"></span>
+        </div>
+        <strong class="negative" id="negative-ratio">0%</strong>
+        <span id="sample-size"></span>
+      </div>
+      <div class="panel metric verdict-card span-4">
+        <div class="metric-head">
+          <small>综合判断</small>
+          <span class="metric-note" id="analysis-method"></span>
+        </div>
+        <p class="verdict" id="verdict"></p>
+      </div>
+    </section>
+
+    <section class="grid">
+      <div class="panel span-5">
+        <div class="section-title">
+          <h2>多维评分</h2>
+          <span>0 到 10</span>
+        </div>
+        <div id="scores"></div>
+      </div>
+      <div class="panel span-7">
+        <div class="section-title">
+          <h2>平台分布</h2>
+          <span>正 / 中 / 负</span>
+        </div>
+        <div id="platforms"></div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <div class="section-title">
+        <h2>高频口碑标签</h2>
+        <span id="tag-count"></span>
+      </div>
+      <div class="tag-cloud" id="tags"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-title">
+        <h2>深度评论拆解</h2>
+        <span id="item-count"></span>
+      </div>
+      <div class="review-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 92px;">平台</th>
+              <th style="width: 92px;">倾向</th>
+              <th>毒舌点评</th>
+              <th>入坑理由</th>
+              <th style="width: 160px;">评分</th>
+            </tr>
+          </thead>
+          <tbody id="items"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <script id="report-data" type="application/json">{"book": "诡秘之主", "review_count": 2, "agent_used": false, "analysis_method": "heuristic", "agent_batches": 0, "heuristic_batches": 1, "ratio": {"positive": 0.5, "neutral": 0.5, "negative": 0.0}, "counts": {"positive": 1, "neutral": 1}, "average_scores": {"writing": 7.0, "logic": 6.85, "update_speed": 7.0, "sentiment": 0.27}, "platform_breakdown": {"douban": {"positive": 1, "neutral": 0, "negative": 0, "total": 1}, "tieba": {"positive": 0, "neutral": 1, "negative": 0, "total": 1}}, "top_tags": [{"tag": "文笔细腻", "count": 2}, {"tag": "角色鲜活", "count": 2}, {"tag": "后期崩坏", "count": 2}, {"tag": "设定亮眼", "count": 1}, {"tag": "节奏拖沓", "count": 1}, {"tag": "爽点密集", "count": 1}], "verdict": "口碑分化明显，适合结合标签看自己能否接受主要争议。", "items": [{"review_id": "douban-2c0111b94102", "platform": "douban", "title": "设定和伏笔是最大长板", "source_url": "sample://douban/1", "sentiment": "positive", "sentiment_score": 0.67, "writing_score": 6.5, "logic_score": 8.5, "update_speed_score": 6.5, "one_liner": "不是无脑吹，核心优势确实落在文笔细腻、设定亮眼上。", "entry_reason": "适合想看文笔细腻、设定亮眼、且愿意慢慢吃设定的读者入坑。", "tags": ["文笔细腻", "设定亮眼", "角色鲜活", "后期崩坏"], "evidence": "，前期节奏不算快，但文笔稳定，角色的行为逻辑基本能自洽。中后期很多细"}, {"review_id": "tieba-c9f1920c1412", "platform": "tieba", "title": "好看但不是没有水分", "source_url": "sample://tieba/1", "sentiment": "neutral", "sentiment_score": -0.14, "writing_score": 7.5, "logic_score": 5.2, "update_speed_score": 7.5, "one_liner": "优缺点都很明显，文笔细腻、节奏拖沓决定你会不会继续追。", "entry_reason": "适合先读前几十章确认文笔细腻、节奏拖沓是否合胃口。", "tags": ["文笔细腻", "节奏拖沓", "角色鲜活", "爽点密集", "后期崩坏"], "evidence": "优点是文笔流畅、氛围感强，剧情推进到关键卷会很上头；但"}]}</script>
+  <script>
+    const report = JSON.parse(document.getElementById("report-data").textContent);
+    const pct = value => `${Math.round((value || 0) * 100)}%`;
+    const esc = value => String(value ?? "").replace(/[&<>"']/g, ch => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+    }[ch]));
+
+    const ratio = report.ratio || {};
+    const counts = report.counts || {};
+    const platforms = report.platform_breakdown || {};
+    const platformNames = Object.keys(platforms);
+    const platformTotal = platformNames.length || 0;
+    const agentText = report.agent_used ? "Agent" : "本地规则";
+
+    document.getElementById("title").textContent = `${report.book || "小说"} 舆情看板`;
+    document.getElementById("subtitle").textContent =
+      `共分析 ${report.review_count || 0} 条深度书评，覆盖 ${platformTotal || 0} 个平台，当前分析方法：${agentText}`;
+    document.getElementById("summary-strip").innerHTML = [
+      ["样本", `${report.review_count || 0} 条`],
+      ["平台", platformNames.length ? platformNames.join(" / ") : "暂无"],
+      ["方法", agentText]
+    ].map(([label, value]) => `<span class="summary-chip">${esc(label)} <strong>${esc(value)}</strong></span>`).join("");
+    document.getElementById("positive-ratio").textContent = pct(ratio.positive);
+    document.getElementById("negative-ratio").textContent = pct(ratio.negative);
+    document.getElementById("positive-count").textContent = `${counts.positive || 0} 条`;
+    document.getElementById("negative-count").textContent = `${counts.negative || 0} 条`;
+    document.getElementById("sample-size").textContent = `${report.review_count || 0} 条样本`;
+    document.getElementById("analysis-method").textContent = agentText;
+    document.getElementById("verdict").textContent = report.verdict || "";
+    document.getElementById("bar-positive").style.width = pct(ratio.positive);
+    document.getElementById("bar-neutral").style.width = pct(ratio.neutral);
+    document.getElementById("bar-negative").style.width = pct(ratio.negative);
+
+    const scoreNames = { writing: "文笔", logic: "逻辑", update_speed: "更新速度", sentiment: "情绪均值" };
+    document.getElementById("scores").innerHTML = Object.entries(scoreNames).map(([key, label]) => {
+      const raw = Number((report.average_scores || {})[key] || 0);
+      const value = key === "sentiment" ? ((raw + 1) / 2 * 10) : raw;
+      return `<div class="score-row">
+        <span>${esc(label)}</span>
+        <span class="track"><i style="--w:${Math.max(0, Math.min(100, value * 10))}%"></i></span>
+        <strong>${key === "sentiment" ? raw.toFixed(2) : raw.toFixed(1)}</strong>
+      </div>`;
+    }).join("");
+
+    document.getElementById("platforms").innerHTML =
+      Object.entries(platforms).map(([platform, row]) => {
+        const total = Math.max(row.total || 0, 1);
+        return `<div class="platform-row">
+          <strong>${esc(platform)}</strong>
+          <span class="platform-stack">
+            <span class="p" style="width:${row.positive / total * 100}%"></span>
+            <span class="n" style="width:${row.neutral / total * 100}%"></span>
+            <span class="b" style="width:${row.negative / total * 100}%"></span>
+          </span>
+          <span>${row.total || 0} 条</span>
+        </div>`;
+      }).join("") || "<p>暂无平台数据</p>";
+
+    document.getElementById("tag-count").textContent = `${(report.top_tags || []).length} 个标签`;
+    document.getElementById("tags").innerHTML =
+      (report.top_tags || []).map(row => `<span class="tag">${esc(row.tag)} ${row.count}</span>`).join("") ||
+      "<span class='tag'>暂无标签</span>";
+
+    document.getElementById("item-count").textContent = `${(report.items || []).length} 条`;
+    document.getElementById("items").innerHTML = (report.items || []).map(item => {
+      const score = `文 ${Number(item.writing_score || 0).toFixed(1)} / 逻 ${Number(item.logic_score || 0).toFixed(1)} / 更 ${Number(item.update_speed_score || 0).toFixed(1)}`;
+      return `<tr>
+        <td data-label="平台">${esc(item.platform)}</td>
+        <td data-label="倾向"><span class="pill ${esc(item.sentiment)}">${esc(sentimentLabel(item.sentiment))}</span></td>
+        <td data-label="毒舌点评">${esc(item.one_liner)}<br><small>${esc((item.tags || []).join("、"))}</small></td>
+        <td data-label="入坑理由">${esc(item.entry_reason)}<br><small>${esc(item.evidence || "")}</small></td>
+        <td data-label="评分">${esc(score)}</td>
+      </tr>`;
+    }).join("");
+
+    function sentimentLabel(value) {
+      return ({ positive: "正面", neutral: "中性", negative: "负面" })[value] || "中性";
+    }
+  </script>
+</body>
+</html>

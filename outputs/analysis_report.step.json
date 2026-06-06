@@ -1,0 +1,175 @@
+{
+  "book": "诡秘之主",
+  "review_count": 5,
+  "agent_used": false,
+  "ratio": {
+    "positive": 0.4,
+    "neutral": 0.2,
+    "negative": 0.4
+  },
+  "counts": {
+    "positive": 2,
+    "neutral": 1,
+    "negative": 2
+  },
+  "average_scores": {
+    "writing": 6.44,
+    "logic": 7.18,
+    "update_speed": 6.1,
+    "sentiment": 0.03
+  },
+  "platform_breakdown": {
+    "douban": {
+      "positive": 1,
+      "neutral": 0,
+      "negative": 1,
+      "total": 2
+    },
+    "tieba": {
+      "positive": 0,
+      "neutral": 1,
+      "negative": 1,
+      "total": 2
+    },
+    "xiaohongshu": {
+      "positive": 1,
+      "neutral": 0,
+      "negative": 0,
+      "total": 1
+    }
+  },
+  "top_tags": [
+    {
+      "tag": "文笔细腻",
+      "count": 5
+    },
+    {
+      "tag": "角色鲜活",
+      "count": 5
+    },
+    {
+      "tag": "设定亮眼",
+      "count": 4
+    },
+    {
+      "tag": "后期崩坏",
+      "count": 2
+    },
+    {
+      "tag": "节奏拖沓",
+      "count": 2
+    },
+    {
+      "tag": "爽点密集",
+      "count": 2
+    },
+    {
+      "tag": "逻辑硬伤",
+      "count": 1
+    }
+  ],
+  "verdict": "口碑分化明显，适合结合标签看自己能否接受主要争议。",
+  "items": [
+    {
+      "review_id": "douban-2c0111b94102",
+      "platform": "douban",
+      "title": "设定和伏笔是最大长板",
+      "source_url": "sample://douban/1",
+      "sentiment": "positive",
+      "sentiment_score": 0.67,
+      "writing_score": 6.5,
+      "logic_score": 8.5,
+      "update_speed_score": 6.5,
+      "one_liner": "不是无脑吹，核心优势确实落在文笔细腻、设定亮眼上。",
+      "entry_reason": "适合想看文笔细腻、设定亮眼、且愿意慢慢吃设定的读者入坑。",
+      "tags": [
+        "文笔细腻",
+        "设定亮眼",
+        "角色鲜活",
+        "后期崩坏"
+      ],
+      "evidence": "，前期节奏不算快，但文笔稳定，角色的行为逻辑基本能自洽。中后期很多细"
+    },
+    {
+      "review_id": "tieba-c9f1920c1412",
+      "platform": "tieba",
+      "title": "好看但不是没有水分",
+      "source_url": "sample://tieba/1",
+      "sentiment": "neutral",
+      "sentiment_score": -0.14,
+      "writing_score": 7.5,
+      "logic_score": 5.2,
+      "update_speed_score": 7.5,
+      "one_liner": "优缺点都很明显，文笔细腻、节奏拖沓决定你会不会继续追。",
+      "entry_reason": "适合先读前几十章确认文笔细腻、节奏拖沓是否合胃口。",
+      "tags": [
+        "文笔细腻",
+        "节奏拖沓",
+        "角色鲜活",
+        "爽点密集",
+        "后期崩坏"
+      ],
+      "evidence": "优点是文笔流畅、氛围感强，剧情推进到关键卷会很上头；但"
+    },
+    {
+      "review_id": "xiaohongshu-aae6122b1159",
+      "platform": "xiaohongshu",
+      "title": "入坑门槛略高",
+      "source_url": "sample://xhs/1",
+      "sentiment": "positive",
+      "sentiment_score": 0.67,
+      "writing_score": 6.5,
+      "logic_score": 8.5,
+      "update_speed_score": 5.5,
+      "one_liner": "不是无脑吹，核心优势确实落在文笔细腻、设定亮眼上。",
+      "entry_reason": "适合想看文笔细腻、设定亮眼、且愿意慢慢吃设定的读者入坑。",
+      "tags": [
+        "文笔细腻",
+        "设定亮眼",
+        "角色鲜活",
+        "爽点密集"
+      ],
+      "evidence": "收的人会很吃这一套。文笔不是华丽挂，但胜在干净，逻辑比很多热门文扎实"
+    },
+    {
+      "review_id": "tieba-432f9027d85c",
+      "platform": "tieba",
+      "title": "雷点集中在节奏",
+      "source_url": "sample://tieba/2",
+      "sentiment": "negative",
+      "sentiment_score": -0.45,
+      "writing_score": 5.2,
+      "logic_score": 6.2,
+      "update_speed_score": 5.5,
+      "one_liner": "雷点不藏着掖着，文笔细腻、逻辑硬伤会直接劝退挑剔读者。",
+      "entry_reason": "只建议能接受文笔细腻、逻辑硬伤争议、想亲自验毒的读者试读。",
+      "tags": [
+        "文笔细腻",
+        "逻辑硬伤",
+        "设定亮眼",
+        "节奏拖沓",
+        "角色鲜活"
+      ],
+      "evidence": "降智。要说毒点，不是文笔差，而是你能不能接受慢慢铺世界观。"
+    },
+    {
+      "review_id": "douban-9cd1e7269cd9",
+      "platform": "douban",
+      "title": "口碑不是纯注水",
+      "source_url": "sample://douban/2",
+      "sentiment": "negative",
+      "sentiment_score": -0.6,
+      "writing_score": 6.5,
+      "logic_score": 7.5,
+      "update_speed_score": 5.5,
+      "one_liner": "雷点不藏着掖着，文笔细腻、设定亮眼会直接劝退挑剔读者。",
+      "entry_reason": "只建议能接受文笔细腻、设定亮眼争议、想亲自验毒的读者试读。",
+      "tags": [
+        "文笔细腻",
+        "设定亮眼",
+        "角色鲜活"
+      ],
+      "evidence": "、角色成长都比较稳，文笔也能服务悬疑氛围。负面主要来自慢热和信息量过"
+    }
+  ]
+}

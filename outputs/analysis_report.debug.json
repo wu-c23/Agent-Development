@@ -1,0 +1,667 @@
+{
+  "book": "诡秘之主",
+  "review_count": 31,
+  "agent_used": false,
+  "analysis_method": "heuristic",
+  "agent_batches": 0,
+  "heuristic_batches": 6,
+  "ratio": {
+    "positive": 0.2903,
+    "neutral": 0.3871,
+    "negative": 0.3226
+  },
+  "counts": {
+    "neutral": 12,
+    "negative": 10,
+    "positive": 9
+  },
+  "average_scores": {
+    "writing": 5.98,
+    "logic": 6.47,
+    "update_speed": 5.6,
+    "sentiment": 0.03
+  },
+  "platform_breakdown": {
+    "douban": {
+      "positive": 9,
+      "neutral": 12,
+      "negative": 10,
+      "total": 31
+    }
+  },
+  "top_tags": [
+    {
+      "tag": "角色鲜活",
+      "count": 26
+    },
+    {
+      "tag": "设定亮眼",
+      "count": 23
+    },
+    {
+      "tag": "文笔细腻",
+      "count": 15
+    },
+    {
+      "tag": "节奏拖沓",
+      "count": 14
+    },
+    {
+      "tag": "后期崩坏",
+      "count": 13
+    },
+    {
+      "tag": "爽点密集",
+      "count": 8
+    },
+    {
+      "tag": "逻辑硬伤",
+      "count": 2
+    },
+    {
+      "tag": "评价分化",
+      "count": 1
+    }
+  ],
+  "verdict": "口碑分化明显，适合结合标签看自己能否接受主要争议。",
+  "items": [
+    {
+      "review_id": "douban-d484a8fe19cb",
+      "platform": "douban",
+      "title": "高级网文",
+      "source_url": "https://book.douban.com/review/12521522/",
+      "sentiment": "neutral",
+      "sentiment_score": 0.09,
+      "writing_score": 5.5,
+      "logic_score": 7.2,
+      "update_speed_score": 5.5,
+      "one_liner": "优缺点都很明显，设定亮眼、角色鲜活决定你会不会继续追。",
+      "entry_reason": "适合先读前几十章确认设定亮眼、角色鲜活是否合胃口。",
+      "tags": [
+        "设定亮眼",
+        "角色鲜活",
+        "后期崩坏"
+      ],
+      "evidence": "还不错，比一般网文的设定更加贴近现实。但是还是基本的网文套路和直白友"
+    },
+    {
+      "review_id": "douban-f0430b38ae46",
+      "platform": "douban",
+      "title": "设定系的大胜利",
+      "source_url": "https://book.douban.com/review/13887760/",
+      "sentiment": "negative",
+      "sentiment_score": -0.2,
+      "writing_score": 6.5,
+      "logic_score": 7.5,
+      "update_speed_score": 5.5,
+      "one_liner": "雷点不藏着掖着，文笔细腻、设定亮眼会直接劝退挑剔读者。",
+      "entry_reason": "只建议能接受文笔细腻、设定亮眼争议、想亲自验毒的读者试读。",
+      "tags": [
+        "文笔细腻",
+        "设定亮眼",
+        "节奏拖沓",
+        "角色鲜活",
+        "爽点密集"
+      ],
+      "evidence": "的题材，但是他西式的描写和叙述不是很好。你引用丁尼生，引用茨威格，我"
+    },
+    {
+      "review_id": "douban-ee05eb338fd6",
+      "platform": "douban",
+      "title": "诡秘之主各卷简要流程",
+      "source_url": "https://book.douban.com/review/14567318/",
+      "sentiment": "negative",
+      "sentiment_score": -0.5,
+      "writing_score": 5.5,
+      "logic_score": 5.5,
+      "update_speed_score": 5.5,
+      "one_liner": "雷点不藏着掖着，节奏拖沓、后期崩坏会直接劝退挑剔读者。",
+      "entry_reason": "只建议能接受节奏拖沓、后期崩坏争议、想亲自验毒的读者试读。",
+      "tags": [
+        "节奏拖沓",
+        "后期崩坏"
+      ],
+      "evidence": "得了“永暗之河”的河水， 将五枚含有“源堡”气息的金币分别交给蕾妮特"
+    },
+    {
+      "review_id": "douban-46dae15bdfe0",
+      "platform": "douban",
+      "title": "说说乌贼的《诡秘之主》",
+      "source_url": "https://book.douban.com/review/12572058/",
+      "sentiment": "neutral",
+      "sentiment_score": 0.09,
+      "writing_score": 6.5,
+      "logic_score": 6.2,
+      "update_speed_score": 5.5,
+      "one_liner": "优缺点都很明显，文笔细腻、设定亮眼决定你会不会继续追。",
+      "entry_reason": "适合先读前几十章确认文笔细腻、设定亮眼是否合胃口。",
+      "tags": [
+        "文笔细腻",
+        "设定亮眼",
+        "角色鲜活",
+        "后期崩坏"
+      ],
+      "evidence": "来的结局和略显僵硬的文笔不谈，《诡秘之主》依然是一部在当今网文届举足"
+    },
+    {
+      "review_id": "douban-0c4c943dfee8",
+      "platform": "douban",
+      "title": "重读诡秘",
+      "source_url": "https://book.douban.com/review/15181769/",
+      "sentiment": "positive",
+      "sentiment_score": 0.71,
+      "writing_score": 5.5,
+      "logic_score": 7.5,
+      "update_speed_score": 6.5,
+      "one_liner": "不是无脑吹，核心优势确实落在设定亮眼、角色鲜活上。",
+      "entry_reason": "适合想看设定亮眼、角色鲜活、且愿意慢慢吃设定的读者入坑。",
+      "tags": [
+        "设定亮眼",
+        "角色鲜活",
+        "爽点密集",
+        "后期崩坏"
+      ],
+      "evidence": "是光有这些丰富的奇幻设定，并不能将诡秘之主抬到新时代网文代表的高度，"
+    },
+    {
+      "review_id": "douban-91c934497f4a",
+      "platform": "douban",
+      "title": "暴躁人士请勿入此书",
+      "source_url": "https://book.douban.com/review/14502999/",
+      "sentiment": "positive",
+      "sentiment_score": 0.5,
+      "writing_score": 6.5,
+      "logic_score": 5.5,
+      "update_speed_score": 5.5,
+      "one_liner": "不是无脑吹，核心优势确实落在文笔细腻上。",
+      "entry_reason": "适合想看文笔细腻、且愿意慢慢吃设定的读者入坑。",
+      "tags": [
+        "文笔细腻"
+      ],
+      "evidence": "情节起推进作用的细节描写无可厚非甚至可以说是必要，但是大量琐碎的与主"
+    },
+    {
+      "review_id": "douban-541974220e39",
+      "platform": "douban",
+      "title": "一部贴近现实的小说：晋升、失控和“扮演法”",
+      "source_url": "https://book.douban.com/review/14321712/",
+      "sentiment": "neutral",
+      "sentiment_score": 0.0,
+      "writing_score": 6.5,
+      "logic_score": 6.5,
+      "update_speed_score": 5.5,
+      "one_liner": "优缺点都很明显，文笔细腻、设定亮眼决定你会不会继续追。",
+      "entry_reason": "适合先读前几十章确认文笔细腻、设定亮眼是否合胃口。",
+      "tags": [
+        "文笔细腻",
+        "设定亮眼",
+        "节奏拖沓",
+        "角色鲜活"
+      ],
+      "evidence": "。 * 《诡秘之主》描写了一个蒸汽朋克背景下的魔法世界，其中大多数人"
+    },
+    {
+      "review_id": "douban-5bcfc75c00b4",
+      "platform": "douban",
+      "title": "《诡秘之主》杂记",
+      "source_url": "https://book.douban.com/review/14182134/",
+      "sentiment": "neutral",
+      "sentiment_score": 0.14,
+      "writing_score": 6.5,
+      "logic_score": 8.5,
+      "update_speed_score": 5.5,
+      "one_liner": "优缺点都很明显，文笔细腻、设定亮眼决定你会不会继续追。",
+      "entry_reason": "适合先读前几十章确认文笔细腻、设定亮眼是否合胃口。",
+      "tags": [
+        "文笔细腻",
+        "设定亮眼",
+        "节奏拖沓",
+        "角色鲜活",
+        "爽点密集"
+      ],
+      "evidence": "在这样的关键场景上的描写没有达到我预期的最高水平，但我仍然愿意给予8"
+    },
+    {
+      "review_id": "douban-aa585c5ee12a",
+      "platform": "douban",
+      "title": "克系修仙小说的诞生",
+      "source_url": "https://book.douban.com/review/13667458/",
+      "sentiment": "positive",
+      "sentiment_score": 0.67,
+      "writing_score": 6.5,
+      "logic_score": 7.2,
+      "update_speed_score": 5.5,
+      "one_liner": "不是无脑吹，核心优势确实落在文笔细腻、逻辑硬伤上。",
+      "entry_reason": "适合想看文笔细腻、逻辑硬伤、且愿意慢慢吃设定的读者入坑。",
+      "tags": [
+        "文笔细腻",
+        "逻辑硬伤",
+        "设定亮眼",
+        "角色鲜活",
+        "爽点密集"
+      ],
+      "evidence": "从设定到构思以及细节描写，都有值得品评之处。 设定方面，糅合了蒸汽朋"
+    },
+    {
+      "review_id": "douban-0fa502870bd4",
+      "platform": "douban",
+      "title": "一篇关于愚者的旅行",
+      "source_url": "https://book.douban.com/review/13286884/",
+      "sentiment": "positive",
+      "sentiment_score": 0.71,
+      "writing_score": 5.5,
+      "logic_score": 5.5,
+      "update_speed_score": 5.5,
+      "one_liner": "不是无脑吹，核心优势确实落在角色鲜活、爽点密集上。",
+      "entry_reason": "适合想看角色鲜活、爽点密集、且愿意慢慢吃设定的读者入坑。",
+      "tags": [
+        "角色鲜活",
+        "爽点密集"
+      ],
+      "evidence": "直扮演符合扮演人设的人物，他是他们，他们也都是他，在对比一下现实社会"
+    },
+    {
+      "review_id": "douban-1a7441352cfe",
+      "platform": "douban",
+      "title": "一个克苏鲁文化爱好者的书评",
+      "source_url": "https://book.douban.com/review/12908462/",
+      "sentiment": "positive",
+      "sentiment_score": 0.45,
+      "writing_score": 7.5,
+      "logic_score": 7.5,
+      "update_speed_score": 5.5,
+      "one_liner": "不是无脑吹，核心优势确实落在文笔细腻、设定亮眼上。",
+      "entry_reason": "适合想看文笔细腻、设定亮眼、且愿意慢慢吃设定的读者入坑。",
+      "tags": [
+        "文笔细腻",
+        "设定亮眼",
+        "节奏拖沓",
+        "角色鲜活",
+        "爽点密集"
+      ],
+      "evidence": "价，总的来说： 优秀文笔，一流设定，合理剧情，正能量价值观（毫不动摇"
+    },
+    {
+      "review_id": "douban-be773564c9e7",
+      "platform": "douban",
+      "title": "网络小说的时间跨度",
+      "source_url": "https://book.douban.com/review/15561525/",
+      "sentiment": "neutral",
+      "sentiment_score": -0.14,
+      "writing_score": 7.5,
+      "logic_score": 6.5,
+      "update_speed_score": 5.5,
+      "one_liner": "优缺点都很明显，文笔细腻、设定亮眼决定你会不会继续追。",
+      "entry_reason": "适合先读前几十章确认文笔细腻、设定亮眼是否合胃口。",
+      "tags": [
+        "文笔细腻",
+        "设定亮眼",
+        "角色鲜活",
+        "爽点密集",
+        "后期崩坏"
+      ],
+      "evidence": "不存在而是书中这样的描写实际上并不是未知的恐惧，想要营造的诡秘范围，"
+    },
+    {
+      "review_id": "douban-88ecd0a53405",
+      "platform": "douban",
+      "title": "请不要随便杠我，不要说我笔给你，你来写",
+      "source_url": "https://book.douban.com/review/15511168/",
+      "sentiment": "negative",
+      "sentiment_score": -0.33,
+      "writing_score": 5.5,
+      "logic_score": 6.2,
+      "update_speed_score": 5.5,
+      "one_liner": "雷点不藏着掖着，逻辑硬伤、设定亮眼会直接劝退挑剔读者。",
+      "entry_reason": "只建议能接受逻辑硬伤、设定亮眼争议、想亲自验毒的读者试读。",
+      "tags": [
+        "逻辑硬伤",
+        "设定亮眼",
+        "节奏拖沓",
+        "角色鲜活"
+      ],
+      "evidence": "阿蒙一些地方感觉强行降智了，还有罗萨戈他也感觉被强行降智了，他们俩的"
+    },
+    {
+      "review_id": "douban-529803597ac1",
+      "platform": "douban",
+      "title": "《诡秘之主》中的人文视角与关怀",
+      "source_url": "https://book.douban.com/review/15052533/",
+      "sentiment": "negative",
+      "sentiment_score": -0.25,
+      "writing_score": 6.5,
+      "logic_score": 7.5,
+      "update_speed_score": 5.5,
+      "one_liner": "雷点不藏着掖着，文笔细腻、设定亮眼会直接劝退挑剔读者。",
+      "entry_reason": "只建议能接受文笔细腻、设定亮眼争议、想亲自验毒的读者试读。",
+      "tags": [
+        "文笔细腻",
+        "设定亮眼",
+        "节奏拖沓",
+        "角色鲜活",
+        "后期崩坏"
+      ],
+      "evidence": "界时，不厌其烦地详细描写了这里的人吃什么，用什么，要花多少钱，风俗习"
+    },
+    {
+      "review_id": "douban-69477e9663dc",
+      "platform": "douban",
+      "title": "赞美愚者！完结二周年，随便聊聊《诡秘之主》的反克系内核",
+      "source_url": "https://book.douban.com/review/14378945/",
+      "sentiment": "negative",
+      "sentiment_score": -0.47,
+      "writing_score": 6.5,
+      "logic_score": 6.2,
+      "update_speed_score": 6.5,
+      "one_liner": "雷点不藏着掖着，文笔细腻、设定亮眼会直接劝退挑剔读者。",
+      "entry_reason": "只建议能接受文笔细腻、设定亮眼争议、想亲自验毒的读者试读。",
+      "tags": [
+        "文笔细腻",
+        "设定亮眼",
+        "角色鲜活",
+        "爽点密集",
+        "后期崩坏"
+      ],
+      "evidence": "是更多的故事对困难的描写是偏向表面化的。太多的升级小说里，主角会在身"
+    },
+    {
+      "review_id": "douban-d43e44d76590",
+      "platform": "douban",
+      "title": "终于看完《诡秘之主》啦！！",
+      "source_url": "https://book.douban.com/review/13586649/",
+      "sentiment": "neutral",
+      "sentiment_score": 0.0,
+      "writing_score": 7.5,
+      "logic_score": 7.5,
+      "update_speed_score": 5.5,
+      "one_liner": "优缺点都很明显，文笔细腻、设定亮眼决定你会不会继续追。",
+      "entry_reason": "适合先读前几十章确认文笔细腻、设定亮眼是否合胃口。",
+      "tags": [
+        "文笔细腻",
+        "设定亮眼",
+        "角色鲜活"
+      ],
+      "evidence": "背景描写，而且乌贼的文笔的确让“第一网文”的名头有些虚。刚开始看第一"
+    },
+    {
+      "review_id": "douban-d6e1cc67bf2d",
+      "platform": "douban",
+      "title": "关于神与爱",
+      "source_url": "https://book.douban.com/review/13351965/",
+      "sentiment": "neutral",
+      "sentiment_score": 0.0,
+      "writing_score": 5.5,
+      "logic_score": 5.5,
+      "update_speed_score": 5.5,
+      "one_liner": "优缺点都很明显，评价分化决定你会不会继续追。",
+      "entry_reason": "适合先读前几十章确认评价分化是否合胃口。",
+      "tags": [
+        "评价分化"
+      ],
+      "evidence": "会不会《诡秘之主》中克莱恩成神的过程就像是人成为超人（尼采式）的过程？"
+    },
+    {
+      "review_id": "douban-b201808bc034",
+      "platform": "douban",
+      "title": "瑕不掩瑜，看得累了主要说瑕",
+      "source_url": "https://book.douban.com/review/13097544/",
+      "sentiment": "negative",
+      "sentiment_score": -0.33,
+      "writing_score": 4.2,
+      "logic_score": 6.5,
+      "update_speed_score": 5.5,
+      "one_liner": "雷点不藏着掖着，设定亮眼、节奏拖沓会直接劝退挑剔读者。",
+      "entry_reason": "只建议能接受设定亮眼、节奏拖沓争议、想亲自验毒的读者试读。",
+      "tags": [
+        "设定亮眼",
+        "节奏拖沓",
+        "角色鲜活"
+      ],
+      "evidence": "，虽然前几章作者硬把设定塞给你那会确实让人昏昏欲睡，但是这个作者埋线"
+    },
+    {
+      "review_id": "douban-86cd6b8be3bc",
+      "platform": "douban",
+      "title": "感觉情感方面过于欠缺了",
+      "source_url": "https://book.douban.com/review/16888280/",
+      "sentiment": "neutral",
+      "sentiment_score": 0.0,
+      "writing_score": 5.5,
+      "logic_score": 5.5,
+      "update_speed_score": 5.5,
+      "one_liner": "优缺点都很明显，角色鲜活决定你会不会继续追。",
+      "entry_reason": "适合先读前几十章确认角色鲜活是否合胃口。",
+      "tags": [
+        "角色鲜活"
+      ],
+      "evidence": "实的。 第二个问题是人物形象和故事情节过于简单，里面的人仿佛是没有计"
+    },
+    {
+      "review_id": "douban-73356e97b47f",
+      "platform": "douban",
+      "title": "阿罗德斯语录",
+      "source_url": "https://book.douban.com/review/15087493/",
+      "sentiment": "negative",
+      "sentiment_score": -0.5,
+      "writing_score": 5.5,
+      "logic_score": 5.5,
+      "update_speed_score": 5.5,
+      "one_liner": "雷点不藏着掖着，节奏拖沓会直接劝退挑剔读者。",
+      "entry_reason": "只建议能接受节奏拖沓争议、想亲自验毒的读者试读。",
+      "tags": [
+        "节奏拖沓"
+      ],
+      "evidence": "” 古老银镜的表面，水光一阵晃荡，惨白的单词勾勒了出来： “不怕。”"
+    },
+    {
+      "review_id": "douban-e3da4b67a172",
+      "platform": "douban",
+      "title": "1",
+      "source_url": "https://book.douban.com/review/14829682/",
+      "sentiment": "neutral",
+      "sentiment_score": -0.09,
+      "writing_score": 5.5,
+      "logic_score": 5.5,
+      "update_speed_score": 5.5,
+      "one_liner": "优缺点都很明显，节奏拖沓、角色鲜活决定你会不会继续追。",
+      "entry_reason": "适合先读前几十章确认节奏拖沓、角色鲜活是否合胃口。",
+      "tags": [
+        "节奏拖沓",
+        "角色鲜活",
+        "后期崩坏"
+      ],
+      "evidence": "同嚼蜡只能说是寡淡如水，塔罗会也如日常任务般令人乏味，整体上剧情的张"
+    },
+    {
+      "review_id": "douban-0690cad00d49",
+      "platform": "douban",
+      "title": "二刷诡秘之主的碎碎碎念",
+      "source_url": "https://book.douban.com/review/14698521/",
+      "sentiment": "positive",
+      "sentiment_score": 0.67,
+      "writing_score": 6.5,
+      "logic_score": 5.5,
+      "update_speed_score": 5.5,
+      "one_liner": "不是无脑吹，核心优势确实落在角色鲜活上。",
+      "entry_reason": "适合想看角色鲜活、且愿意慢慢吃设定的读者入坑。",
+      "tags": [
+        "角色鲜活"
+      ],
+      "evidence": "明瑞了。 二刷对这个人物感触还是更深一些，小克面对孤独的坚毅和守护的"
+    },
+    {
+      "review_id": "douban-e36f0e28cfda",
+      "platform": "douban",
+      "title": "读后感！",
+      "source_url": "https://book.douban.com/review/13959830/",
+      "sentiment": "neutral",
+      "sentiment_score": 0.0,
+      "writing_score": 4.2,
+      "logic_score": 5.5,
+      "update_speed_score": 5.5,
+      "one_liner": "优缺点都很明显，设定亮眼、角色鲜活决定你会不会继续追。",
+      "entry_reason": "适合先读前几十章确认设定亮眼、角色鲜活是否合胃口。",
+      "tags": [
+        "设定亮眼",
+        "角色鲜活"
+      ],
+      "evidence": "总的来说这部小说的世界观真的超级庞大真的超级详细，每个人真的都有血"
+    },
+    {
+      "review_id": "douban-267c58b59752",
+      "platform": "douban",
+      "title": "随便写写",
+      "source_url": "https://book.douban.com/review/13506429/",
+      "sentiment": "negative",
+      "sentiment_score": -0.2,
+      "writing_score": 5.5,
+      "logic_score": 6.5,
+      "update_speed_score": 5.5,
+      "one_liner": "雷点不藏着掖着，设定亮眼、角色鲜活会直接劝退挑剔读者。",
+      "entry_reason": "只建议能接受设定亮眼、角色鲜活争议、想亲自验毒的读者试读。",
+      "tags": [
+        "设定亮眼",
+        "角色鲜活",
+        "后期崩坏"
+      ],
+      "evidence": "也都顺理成章地成长，世界观也慢慢展开。但这么多轻快乃至欢乐的角色和日"
+    },
+    {
+      "review_id": "douban-7021a8fd595f",
+      "platform": "douban",
+      "title": "它慢热，它枯燥，它啰嗦，但它是部好小说",
+      "source_url": "https://book.douban.com/review/13068499/",
+      "sentiment": "positive",
+      "sentiment_score": 0.25,
+      "writing_score": 6.5,
+      "logic_score": 7.5,
+      "update_speed_score": 5.5,
+      "one_liner": "不是无脑吹，核心优势确实落在文笔细腻、设定亮眼上。",
+      "entry_reason": "适合想看文笔细腻、设定亮眼、且愿意慢慢吃设定的读者入坑。",
+      "tags": [
+        "文笔细腻",
+        "设定亮眼",
+        "节奏拖沓",
+        "角色鲜活",
+        "后期崩坏"
+      ],
+      "evidence": "的对普通人生活的过多描写，过多扮演，则已经毫无必要。不是说不可以写，"
+    },
+    {
+      "review_id": "douban-51e81744f832",
+      "platform": "douban",
+      "title": "网文中的神作？",
+      "source_url": "https://book.douban.com/review/12554478/",
+      "sentiment": "positive",
+      "sentiment_score": 0.6,
+      "writing_score": 6.5,
+      "logic_score": 5.5,
+      "update_speed_score": 5.5,
+      "one_liner": "不是无脑吹，核心优势确实落在文笔细腻、设定亮眼上。",
+      "entry_reason": "适合想看文笔细腻、设定亮眼、且愿意慢慢吃设定的读者入坑。",
+      "tags": [
+        "文笔细腻",
+        "设定亮眼",
+        "角色鲜活",
+        "后期崩坏"
+      ],
+      "evidence": "问题，如内容格式化，文笔低龄化等。本书确实有了与众不同的地方，无论是"
+    },
+    {
+      "review_id": "douban-60e047e50637",
+      "platform": "douban",
+      "title": "“完美小说说明书”",
+      "source_url": "https://book.douban.com/review/16847748/",
+      "sentiment": "negative",
+      "sentiment_score": -0.6,
+      "writing_score": 4.9,
+      "logic_score": 6.5,
+      "update_speed_score": 5.5,
+      "one_liner": "雷点不藏着掖着，文笔细腻、设定亮眼会直接劝退挑剔读者。",
+      "entry_reason": "只建议能接受文笔细腻、设定亮眼争议、想亲自验毒的读者试读。",
+      "tags": [
+        "文笔细腻",
+        "设定亮眼",
+        "节奏拖沓",
+        "角色鲜活",
+        "后期崩坏"
+      ],
+      "evidence": "格的去讲好一个故事的文笔与谋篇布局能力。他的文字更多是在以一种说明书"
+    },
+    {
+      "review_id": "douban-54dedb0554a0",
+      "platform": "douban",
+      "title": "设定挺严密但剧情平淡无聊",
+      "source_url": "https://book.douban.com/review/16336925/",
+      "sentiment": "neutral",
+      "sentiment_score": 0.0,
+      "writing_score": 6.5,
+      "logic_score": 8.5,
+      "update_speed_score": 5.5,
+      "one_liner": "优缺点都很明显，文笔细腻、设定亮眼决定你会不会继续追。",
+      "entry_reason": "适合先读前几十章确认文笔细腻、设定亮眼是否合胃口。",
+      "tags": [
+        "文笔细腻",
+        "设定亮眼",
+        "节奏拖沓",
+        "角色鲜活"
+      ],
+      "evidence": "疲劳。此外，战斗场面描写平淡，情感线也未能深刻地打动人心，进一步削弱"
+    },
+    {
+      "review_id": "douban-f2fc3bc28845",
+      "platform": "douban",
+      "title": "神们的“锚”",
+      "source_url": "https://book.douban.com/review/16263349/",
+      "sentiment": "positive",
+      "sentiment_score": 0.33,
+      "writing_score": 5.5,
+      "logic_score": 6.5,
+      "update_speed_score": 6.5,
+      "one_liner": "不是无脑吹，核心优势确实落在设定亮眼、角色鲜活上。",
+      "entry_reason": "适合想看设定亮眼、角色鲜活、且愿意慢慢吃设定的读者入坑。",
+      "tags": [
+        "设定亮眼",
+        "角色鲜活"
+      ],
+      "evidence": "惭愧。 第二个优点，设定上算是女性友好吧。没有贬低女性的地方，几个女"
+    },
+    {
+      "review_id": "douban-1da592ec1a80",
+      "platform": "douban",
+      "title": "还是觉得差一口气",
+      "source_url": "https://book.douban.com/review/15909860/",
+      "sentiment": "neutral",
+      "sentiment_score": 0.0,
+      "writing_score": 5.5,
+      "logic_score": 6.5,
+      "update_speed_score": 5.5,
+      "one_liner": "优缺点都很明显，设定亮眼决定你会不会继续追。",
+      "entry_reason": "适合先读前几十章确认设定亮眼是否合胃口。",
+      "tags": [
+        "设定亮眼"
+      ],
+      "evidence": "？说到硬核，书的末尾设定是真硬核啊，不照着个图是真看不明白啊。"
+    },
+    {
+      "review_id": "douban-7aab2fbb68b3",
+      "platform": "douban",
+      "title": "“总有些东西高于其他”",
+      "source_url": "https://book.douban.com/review/15844646/",
+      "sentiment": "negative",
+      "sentiment_score": -0.71,
+      "writing_score": 5.5,
+      "logic_score": 5.2,
+      "update_speed_score": 5.5,
+      "one_liner": "雷点不藏着掖着，设定亮眼、节奏拖沓会直接劝退挑剔读者。",
+      "entry_reason": "只建议能接受设定亮眼、节奏拖沓争议、想亲自验毒的读者试读。",
+      "tags": [
+        "设定亮眼",
+        "节奏拖沓",
+        "角色鲜活",
+        "后期崩坏"
+      ],
+      "evidence": "作者乌贼凭借扎实的世界观设计和庞大的人物众生相为我们展现了架空历史"
+    }
+  ]
+}
