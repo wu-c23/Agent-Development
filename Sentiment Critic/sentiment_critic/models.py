@@ -180,6 +180,39 @@ def write_json(path: str | Path, data: dict[str, Any]) -> None:
         file.write("\n")
 
 
+@dataclass
+class CharacterProfile:
+    """小说角色画像 — 用于角色扮演对话。"""
+    id: str                                    # 角色唯一标识
+    name: str                                  # 角色名
+    novel: str                                 # 所属小说
+    author: str = ""                           # 作者
+    personality: list[str] = field(default_factory=list)  # 性格特征
+    speaking_style: str = ""                   # 说话风格描述
+    background: str = ""                       # 角色背景
+    catchphrases: list[str] = field(default_factory=list)  # 经典台词
+    knowledge_boundary: str = ""               # 角色认知边界 (in-universe only / meta)
+    avatar_emoji: str = "🎭"                   # 头像 emoji
+
+    def to_dict(self) -> dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> "CharacterProfile":
+        return cls(
+            id=str(data.get("id", "")),
+            name=str(data.get("name", "")),
+            novel=str(data.get("novel", "")),
+            author=str(data.get("author", "")),
+            personality=list(data.get("personality", [])),
+            speaking_style=str(data.get("speaking_style", "")),
+            background=str(data.get("background", "")),
+            catchphrases=list(data.get("catchphrases", [])),
+            knowledge_boundary=str(data.get("knowledge_boundary", "in-universe")),
+            avatar_emoji=str(data.get("avatar_emoji", "🎭")),
+        )
+
+
 def dedupe_reviews(reviews: Iterable[Review]) -> list[Review]:
     seen: set[str] = set()
     unique: list[Review] = []

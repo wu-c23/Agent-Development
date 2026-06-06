@@ -7,11 +7,13 @@
 
 from __future__ import annotations
 
+import asyncio
 import random
 import time
 
 from fastapi import FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel, Field
 
 app = FastAPI(
     title="Sentiment Critic Mock API",
@@ -171,3 +173,190 @@ async def sentiment_compare(uids: str = Query(..., description="逗号分隔的 
 @app.get("/api/v1/sentiment/health")
 async def health():
     return {"status": "healthy", "version": "1.0.0", "index_count": len(MOCK_NOVELS)}
+
+
+# ---------------------------------------------------------------------------
+# 角色对话端点 (Mock)
+# ---------------------------------------------------------------------------
+
+MOCK_CHARACTERS = [
+    {
+        "id": "klein",
+        "name": "克莱恩·莫雷蒂",
+        "novel": "诡秘之主",
+        "personality": ["谨慎", "冷静", "富有正义感", "轻微吐槽役"],
+        "avatar_emoji": "🎩",
+        "catchphrases": ["主保佑你。", "我只是一个平平无奇的占卜家。"],
+    },
+    {
+        "id": "hanli",
+        "name": "韩立",
+        "novel": "凡人修仙传",
+        "personality": ["谨慎", "隐忍", "务实", "低调"],
+        "avatar_emoji": "🏔️",
+        "catchphrases": ["修仙之道，财侣法地，缺一不可。", "韩某一介散修，不敢当此大任。"],
+    },
+    {
+        "id": "chenge",
+        "name": "陈歌",
+        "novel": "我有一座恐怖屋",
+        "personality": ["乐观", "幽默", "胆大心细", "脑回路清奇"],
+        "avatar_emoji": "👻",
+        "catchphrases": ["欢迎光临恐怖屋，包您满意！", "鬼不可怕，可怕的是没钱赚。"],
+    },
+    {
+        "id": "wangling",
+        "name": "王令",
+        "novel": "仙王的日常生活",
+        "personality": ["低调", "懒散", "内心吐槽丰富", "吃貨"],
+        "avatar_emoji": "😐",
+        "catchphrases": ["……哦。", "无聊。", "今天中午吃什么。"],
+    },
+    {
+        "id": "xiao_yan",
+        "name": "萧炎",
+        "novel": "斗破苍穹",
+        "personality": ["坚韧不拔", "重情重义", "有仇必报", "热血"],
+        "avatar_emoji": "🔥",
+        "catchphrases": ["三十年河东，三十年河西，莫欺少年穷！", "老师，我需要丹药！"],
+    },
+]
+
+
+@app.get("/api/v1/sentiment/character/list")
+async def mock_character_list():
+    return {
+        "characters": MOCK_CHARACTERS,
+        "total": len(MOCK_CHARACTERS),
+    }
+
+
+class MockCharacterChatRequest(BaseModel):
+    query: str
+    character_id: str
+    top_k: int = Field(default=5, ge=1, le=10)
+    session_id: str = Field(default="", max_length=128)
+
+
+_MOCK_CHARACTER_RESPONSES: dict[str, list[str]] = {
+    "klein": [
+        "（略微沉吟）这个问题很有意思……不过作为一位占卜家，我需要先提醒你：有些事情知道得太多未必是好事。",
+        "主保佑你。如果你对神秘学感兴趣，我倒是可以推荐几本入门书籍——当然，前提是你做好了面对非凡世界的准备。",
+        "（压低声音）廷根市最近确实不太平，各种非凡事件频发。但具体细节……抱歉，这涉及值夜者的保密条例。",
+        "唔…以一个序列9占卜家的经验来看，凡事都要留一手准备。毕竟，在这个世界上，谨慎才能活得长久。",
+        "（微笑）蒸汽与机械之神在上，你今天遇到的问题，也许可以用最简单的方式解决——比如先喝杯红茶冷静一下。",
+    ],
+    "hanli": [
+        "（面无表情）修仙之路，本就充满艰险。韩某能走到今日，靠的不是运气，而是凡事多想三步。",
+        "嗯……此事倒也有趣。不过在下修为尚浅，恐怕帮不上什么忙。",
+        "（略作思索）修仙界中，财侣法地，缺一不可。你若是散修，更要懂得量力而行的道理。",
+        "（语气平淡）天下没有白得的机缘。看上去越美好的事物，背后的代价往往越难以承受。",
+        "（微微颔首）韩某倒是听说过类似的事。不过其中牵扯甚广，不便多言。",
+    ],
+    "chenge": [
+        "（笑容灿烂）欢迎光临恐怖屋！今天想体验什么项目？我们新出了一个'午夜凶铃'主题房，保证让你满意！",
+        "（挠头）其实吧，开鬼屋这件事，最重要的不是吓人，而是让游客玩得开心。毕竟，笑点和泪点之间只差一个反转嘛。",
+        "（眨眨眼）你知道吗？我们恐怖屋的员工都很有特色——比如李叔，他不用化妆就能吓哭小朋友。",
+        "（一本正经）经研究表明，适度恐惧能让人分泌多巴胺。所以来我们鬼屋=快乐，这是科学。",
+        "（边走边介绍）这边是新的'深井医院'主题区，灵感来自本市的一个真实案件…呃，这个还是等买了票再细说吧。",
+    ],
+    "wangling": [
+        "（面无表情地看了你一眼）……哦。",
+        "（慢吞吞地）嗯。今天食堂有红烧肉。",
+        "（眼神放空）……说完了？",
+        "（叹了口气）又要拯救世界了吗……能等我吃完饭再说吗？",
+        "（稍微有了点兴趣）这个嘛……还行。比上次那个有意思一点。",
+    ],
+    "xiao_yan": [
+        "（昂首挺胸）三十年河东三十年河西，莫欺少年穷！这点困难算什么，我萧炎一路走来，什么大风大浪没见过！",
+        "（眼神坚定）老师说过，修炼一途，不进则退。既然选择了这条路，就要走到底。",
+        "（咧嘴一笑）想要丹药？行啊，拿等价的东西来换。炼药师的时间可是很宝贵的。",
+        "（语气渐冷）你最好不是在打萧家的主意。否则……我的异火可不长眼睛。",
+        "（豪爽地拍拍你）放心，有我在，不会让朋友吃亏的。这是我萧炎的承诺。",
+    ],
+}
+
+
+@app.post("/api/v1/sentiment/character/chat")
+async def mock_character_chat(request: MockCharacterChatRequest):
+    import random
+
+    character_id = request.character_id
+    responses = _MOCK_CHARACTER_RESPONSES.get(character_id)
+    character = None
+    for c in MOCK_CHARACTERS:
+        if c["id"] == character_id:
+            character = c
+            break
+
+    if not responses or character is None:
+        raise HTTPException(status_code=404, detail=f"Character '{character_id}' not found")
+
+    # Pick a response based on query content and randomness
+    query_lower = request.query.lower()
+    greetings = ["你好", "嗨", "hi", "hello", "在吗"]
+    about_self = ["你是谁", "你叫什么", "介绍"]
+    about_novel = ["什么小说", "哪本书", "出自"]
+
+    if any(g in query_lower for g in greetings):
+        answer = f"{character['name']}：你好。{character['catchphrases'][0] if character['catchphrases'] else ''}"
+    elif any(w in query_lower for w in about_self):
+        answer = f"我是{character['name']}，来自《{character['novel']}》。"
+    elif any(w in query_lower for w in about_novel):
+        answer = f"我出自《{character['novel']}》。"
+    else:
+        answer = random.choice(responses)
+
+    return {
+        "query": request.query,
+        "answer": answer,
+        "character": {
+            "id": character["id"],
+            "name": character["name"],
+            "novel": character["novel"],
+            "avatar_emoji": character.get("avatar_emoji", "🎭"),
+        },
+        "sources": [character["novel"]],
+        "method": "mock",
+    }
+
+
+class MockCharacterChatByNameRequest(BaseModel):
+    query: str = Field(..., min_length=1, max_length=500)
+    character_name: str = Field(..., min_length=1, max_length=100)
+    novel_name: str = Field(..., min_length=1, max_length=100)
+    top_k: int = Field(default=5, ge=1, le=10)
+    session_id: str = Field(default="", max_length=128)
+
+
+@app.post("/api/v1/sentiment/character/chat-by-name")
+async def mock_character_chat_by_name(request: MockCharacterChatByNameRequest):
+    """Mock — 以任意指定的小说角色身份对话。"""
+    novel_title = request.novel_name
+    character_name = request.character_name
+
+    # 检查小说是否在 mock 数据中
+    novel = _TITLE_MAP.get(novel_title)
+    if novel is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"知识库中暂未收录《{novel_title}》，无法创建「{character_name}」的角色扮演。",
+        )
+
+    # 模拟思考延迟
+    await asyncio.sleep(random.uniform(0.3, 0.8))
+
+    return {
+        "query": request.query,
+        "answer": f"（{character_name}微微点头）你好，我是{character_name}，来自《{novel_title}》。"
+                   f"\n\n{character_name}思索片刻，说道："
+                   f"「{random.choice(['很高兴见到你', '有什么可以帮你的吗', '不知阁下有何见教'])}」",
+        "character": {
+            "name": character_name,
+            "novel": novel_title,
+            "avatar_emoji": "📖",
+        },
+        "sources": [novel_title],
+        "method": "mock_dynamic",
+    }
+

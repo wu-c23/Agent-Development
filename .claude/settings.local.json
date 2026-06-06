@@ -4,7 +4,15 @@
       "Bash(python -c \"import subprocess; print\\(subprocess.run\\(['pip', 'list'], capture_output=True, text=True\\).stdout\\)\")",
       "Bash(python *)",
       "Bash(PYTHONIOENCODING=utf-8 python unified_dashboard.py)",
-      "Bash(python3 -c \"import json; data=json.load\\(open\\('F:/作业/软工2/网络小说大作业/Sentiment Critic/data/novels.json'\\)\\); print\\(f'novels: {len\\(data\\)} entries'\\)\")"
+      "Bash(python3 -c \"import json; data=json.load\\(open\\('F:/作业/软工2/网络小说大作业/Sentiment Critic/data/novels.json'\\)\\); print\\(f'novels: {len\\(data\\)} entries'\\)\")",
+      "Bash(python3 *)",
+      "Bash(taskkill -f -im python.exe)",
+      "Bash(PYTHONUNBUFFERED=1 uvicorn sentiment_critic.sentiment_api:app --port 8003 --host 0.0.0.0)",
+      "Bash(curl -s -X POST http://localhost:8003/api/v1/sentiment/character/chat -H 'Content-Type: application/json' -d '{\"character_id\": \"klein\", \"query\": \"你好，克莱恩。我想问一下，诡秘之主的世界观是怎样的？\", \"session_id\": \"test1\"}')",
+      "Bash(tasklist /fi \"imagename eq python.exe\")",
+      "Bash(curl -s http://localhost:8003/api/v1/sentiment/health)",
+      "Bash(taskkill -f -im uvicorn.exe)",
+      "Bash(netstat -ano)"
     ]
   }
 }

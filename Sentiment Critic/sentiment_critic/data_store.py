@@ -25,6 +25,7 @@ _PACKAGE_DIR = Path(__file__).resolve().parent
 _DATA_DIR = _PACKAGE_DIR.parent / "data"
 _NOVELS_PATH = _DATA_DIR / "novels.json"
 _SENTIMENT_INDEX_PATH = _DATA_DIR / "sentiment_index.json"
+_CHARACTERS_PATH = _DATA_DIR / "characters.json"
 
 
 def _data_path(filename: str) -> Path:
@@ -696,3 +697,53 @@ def build_mock_sentiment_store() -> dict[str, dict[str, Any]]:
         }
 
     return store
+
+
+# ---------------------------------------------------------------------------
+# 角色画像数据
+# ---------------------------------------------------------------------------
+
+_characters_cache: list[dict[str, Any]] | None = None
+
+
+def _load_characters() -> list[dict[str, Any]]:
+    """从 characters.json 加载角色画像。文件不存在时返回空列表。"""
+    if not _CHARACTERS_PATH.exists():
+        return []
+    try:
+        data = read_json(str(_CHARACTERS_PATH))
+        if isinstance(data, list):
+            return data
+    except (json.JSONDecodeError, OSError):
+        return []
+    return []
+
+
+def get_all_characters() -> list[dict[str, Any]]:
+    """返回所有可用角色画像。"""
+    global _characters_cache
+    if _characters_cache is None:
+        _characters_cache = _load_characters()
+    return list(_characters_cache)
+
+
+def get_character(character_id: str) -> dict[str, Any] | None:
+    """根据角色 ID 查询单个角色画像。"""
+    for char in get_all_characters():
+        if char.get("id") == character_id:
+            return dict(char)
+    return None
+
+
+def get_characters_by_novel(novel_title: str) -> list[dict[str, Any]]:
+    """根据小说名查询所属角色列表。"""
+    return [
+        dict(char) for char in get_all_characters()
+        if char.get("novel", "").lower() == novel_title.lower().strip()
+    ]
+
+
+def reload_characters() -> None:
+    """强制重新从磁盘加载角色数据。"""
+    global _characters_cache
+    _characters_cache = _load_characters()

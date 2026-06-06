@@ -183,6 +183,7 @@ th { color: var(--text2); font-weight: 500; font-size: 12px; }
     <button class="active" data-tab="trend" onclick="switchTab('trend')">📊 趋势大屏</button>
     <button data-tab="review" onclick="switchTab('review')">📝 小说评论</button>
     <button data-tab="chat" onclick="switchTab('chat')">🤖 AI 推荐</button>
+	    <button data-tab="character" onclick="switchTab('character');loadCharacterList()">🎭 角色对话</button>
   </div>
   <div class="toolbar">
     <button onclick="toggleTheme()" title="切换明暗主题">🌓 主题</button>
@@ -241,25 +242,83 @@ th { color: var(--text2); font-weight: 500; font-size: 12px; }
 <div class="tab-content" id="tab-chat">
 <div class="container">
   <div class="chat-container">
-    <div class="avoid-tags" id="avoidTags">
+    <div class="avoid-tags" id="avoidTags" style="display:none;">
       <span style="font-size:12px;color:var(--text2);margin-right:4px;">避雷标签:</span>
     </div>
     <div class="chat-messages" id="chatMessages">
       <div class="chat-msg assistant">
         <div class="avatar">🤖</div>
         <div class="bubble">
-          你好！我是 AI 小说推荐助手。<br>
-          告诉我你想看什么类型的小说，比如：<br>
-          • "推荐克苏鲁风格的悬疑小说"<br>
-          • "有没有类似诡秘之主的完结作品"<br>
-          • "想看轻松搞笑的修仙小说"<br>
-          你还可以选择下方的避雷标签，我会帮你过滤掉不合适的作品。
+          你好！我是小说闲聊助手。<br>
+          我可以帮你做这些事：<br>
+          • 推荐小说 — "推荐悬疑小说"<br>
+          • 查询书的信息 — "诡秘之主好看吗"<br>
+          • 闲聊小说话题 — 和我聊聊你喜欢的角色<br><br>
+          试试看吧！
         </div>
       </div>
     </div>
     <div class="chat-input-area">
-      <input type="text" id="chatInput" placeholder="输入你的阅读偏好..." onkeydown="if(event.key==='Enter')sendMessage()">
+      <input type="text" id="chatInput" placeholder="推荐悬疑小说、诡秘之主好看吗..." onkeydown="if(event.key==='Enter')sendMessage()">
       <button id="sendBtn" onclick="sendMessage()">发送</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============ Tab 4: 角色对话 ============ -->
+<div class="tab-content" id="tab-character">
+<div class="container">
+  <div class="chat-container">
+    <!-- 角色选择器 -->
+    <div style="padding: 12px 0; border-bottom: 1px solid var(--border); margin-bottom: 8px;">
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;" id="characterSelector">
+        <span style="font-size:13px; color:var(--text2);">选择角色:</span>
+        <div id="characterLoading" class="loading" style="padding:8px"><div class="spinner"></div></div>
+      </div>
+      <div id="charModeBadge" style="margin-top:6px; display:flex; gap:8px; align-items:center;">
+        <span id="charModeLabel" style="font-size:11px; padding:2px 8px; border-radius:4px; background:#f0f0f0; color:#999;">
+          ⏳ 检测中...
+        </span>
+      </div>
+      <div id="characterInfo" style="display:none; margin-top:8px; padding:8px 12px; background:var(--bg); border-radius:8px; border:1px solid var(--border);">
+        <div style="font-size:13px; color:var(--text2);">
+          <span id="charAvatar" style="font-size:24px; margin-right:8px;"></span>
+          <strong id="charName"></strong> · 《<span id="charNovel"></span>》
+          <span id="charPersonality" style="margin-left:8px;"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 自定义角色输入 -->
+    <div style="margin-top:8px; padding:8px 0 4px; border-top:1px dashed var(--border);">
+      <div style="font-size:12px; color:var(--text2); margin-bottom:6px;">或者指定任意角色：</div>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+        <input type="text" id="customCharName" placeholder="角色名" style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card-bg);color:var(--text);font-size:13px;width:100px;">
+        <span style="color:var(--text2);font-size:13px;">出自</span>
+        <input type="text" id="customCharNovel" placeholder="小说名" style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card-bg);color:var(--text);font-size:13px;width:130px;">
+        <button onclick="startCustomCharacter()" style="padding:5px 14px;border:1px solid var(--accent);border-radius:6px;background:var(--accent);color:#fff;cursor:pointer;font-size:13px;white-space:nowrap;">开始对话</button>
+        <span id="customCharError" style="font-size:12px;color:var(--rose);display:none;"></span>
+      </div>
+    </div>
+
+    <div class="chat-messages" id="characterChatMessages">
+      <div class="chat-msg assistant">
+        <div class="avatar">🎭</div>
+        <div class="bubble">
+          你好！我是角色扮演助手。<br>
+          请先在顶部选择一个小说角色，然后就可以和他们对话了！<br>
+          · 选择「克莱恩」聊聊诡秘之主的世界<br>
+          · 选择「韩立」探讨修仙之道<br>
+          · 选择「陈歌」体验恐怖屋的日常<br>
+          · 选择「王令」感受仙王的日常<br>
+          · 选择「萧炎」点燃热血斗志
+        </div>
+      </div>
+    </div>
+    <div class="chat-input-area">
+      <input type="text" id="characterChatInput" placeholder="和角色对话..." onkeydown="if(event.key==='Enter')sendCharacterMessage()" disabled>
+      <button id="charSendBtn" onclick="sendCharacterMessage()" disabled>发送</button>
     </div>
   </div>
 </div>
@@ -273,7 +332,7 @@ th { color: var(--text2); font-weight: 500; font-size: 12px; }
 // ============================================================
 // 全局状态
 // ============================================================
-const DATA = {"generatedAt": "2026-06-04T04:22:52Z", "summary": "全标签热度趋势仅统计历史月票榜，并按作品月票总数贡献到该作品的所有标签。当前展示数据来自纵横中文网 2026年1-5月月票榜，起点暂不纳入自动采集。", "metrics": [{"id": "hot-tags", "label": "细标签数", "value": "52", "delta": 18.4, "tone": "green"}, {"id": "rising-works", "label": "上升作品", "value": "168", "delta": 21.7, "tone": "amber"}, {"id": "platforms", "label": "监测平台", "value": "1", "deltaLabel": "纵横中文网", "tone": "blue"}, {"id": "migration", "label": "流派月份", "value": "5", "delta": 9.1, "tone": "rose"}], "dataQuality": {"requiredMonths": ["20261", "20262", "20263", "20264", "20265"], "missingMonths": [], "incompleteMonths": [], "isComplete": true, "note": "月票趋势仅使用带 month 参数的历史月票榜记录。", "months": [{"month": "20261", "label": "2026年01月", "records": 200, "uniqueWorks": 200, "tagCount": 160, "heatTotal": 980000, "heatTotalK": 980, "expectedRecords": 200, "complete": true}, {"month": "20262", "label": "2026年02月", "records": 200, "uniqueWorks": 200, "tagCount": 160, "heatTotal": 1025000, "heatTotalK": 1025, "expectedRecords": 200, "complete": true}, {"month": "20263", "label": "2026年03月", "records": 200, "uniqueWorks": 200, "tagCount": 160, "heatTotal": 1102000, "heatTotalK": 1102, "expectedRecords": 200, "complete": true}, {"month": "20264", "label": "2026年04月", "records": 200, "uniqueWorks": 200, "tagCount": 160, "heatTotal": 1188000, "heatTotalK": 1188, "expectedRecords": 200, "complete": true}, {"month": "20265", "label": "2026年05月", "records": 200, "uniqueWorks": 200, "tagCount": 160, "heatTotal": 1240000, "heatTotalK": 1240, "expectedRecords": 200, "complete": true}]}, "heatCurve": {"dates": ["01月", "02月", "03月", "04月", "05月"], "unit": "k", "valueLabel": "月票", "source": "monthly-ticket", "series": [{"name": "传统玄幻", "data": [72, 78, 84, 91, 96], "description": "纵横月票榜中长期基本盘，强设定、升级体系和高燃战斗仍是主轴。"}, {"name": "家族崛起", "data": [38, 46, 59, 77, 92], "description": "从单主角爽点转向宗族、血脉、群像共振，近期上升速度最快。"}, {"name": "热血", "data": [68, 71, 77, 84, 92], "description": "常与传统玄幻、剑道、少年成长并存。"}, {"name": "剑道", "data": [54, 62, 70, 82, 90], "description": "兼具成长线、战斗爽点和辨识度。"}, {"name": "群像", "data": [42, 49, 58, 74, 88], "description": "读者对多角色并肩、家族团队和势力成长的接受度提升。"}, {"name": "轻量金手指", "data": [30, 35, 44, 56, 72], "description": "相比传统系统流，限制型金手指更受现阶段读者青睐。"}, {"name": "规则怪谈", "data": [12, 18, 29, 45, 68], "description": "从废土生存向规则怪谈的迁移趋势明显。"}]}, "hotTags": [{"tag": "传统玄幻", "heat": 96, "change": 33.3, "group": "题材", "stage": "rising", "relatedWorks": ["剑道独尊", "万古神帝", "一剑独尊", "完美世界", "斗破苍穹"]}, {"tag": "热血", "heat": 92, "change": 35.3, "group": "情绪价值", "stage": "rising", "relatedWorks": ["斗破苍穹", "完美世界", "剑来", "遮天", "大主宰"]}, {"tag": "家族崛起", "heat": 92, "change": 142.1, "group": "叙事人设", "stage": "rising", "relatedWorks": ["家族修仙：从种植开始", "修仙家族不能飘", "青莲之巅"]}, {"tag": "剑道", "heat": 90, "change": 66.7, "group": "元素机制", "stage": "rising", "relatedWorks": ["剑来", "一剑独尊", "剑道独尊", "仗剑走天涯", "剑仙之路"]}, {"tag": "群像", "heat": 88, "change": 109.5, "group": "叙事人设", "stage": "rising", "relatedWorks": ["剑来", "诡秘之主", "全职高手", "将夜", "雪中悍刀行"]}, {"tag": "轻量金手指", "heat": 72, "change": 140.0, "group": "元素机制", "stage": "rising", "relatedWorks": ["我的模拟长生路", "苟在妖武乱世修仙", "我在修仙界长命百岁"]}, {"tag": "升级流", "heat": 70, "change": -5.4, "group": "题材", "stage": "stable", "relatedWorks": ["斗破苍穹", "修罗武神", "武动乾坤", "大主宰"]}, {"tag": "规则怪谈", "heat": 68, "change": 466.7, "group": "题材", "stage": "rising", "relatedWorks": ["规则怪谈：我能完美利用规则", "雾都规则档案", "全球规则化"]}, {"tag": "废土生存", "heat": 42, "change": -12.5, "group": "题材", "stage": "cooling", "relatedWorks": ["全球废土：开局一座城", "废土生存指南", "废土之上"]}, {"tag": "凡人流", "heat": 38, "change": 8.6, "group": "题材", "stage": "stable", "relatedWorks": ["凡人修仙传", "凡人修仙记", "修真世界"]}, {"tag": "金手指", "heat": 35, "change": -25.5, "group": "元素机制", "stage": "cooling", "relatedWorks": ["系统赋我长生", "神话版三国", "我能提取熟练度"]}, {"tag": "系统流", "heat": 30, "change": -42.3, "group": "题材", "stage": "cooling", "relatedWorks": ["系统赋我长生", "神话版三国", "超级神基因"]}], "platformCompare": [{"platform": "纵横中文网", "heat": 100, "works": 200, "topTags": ["传统玄幻", "热血", "家族崛起", "剑道", "群像", "轻量金手指"], "status": "active"}], "wordCloud": [{"name": "传统玄幻", "value": 96}, {"name": "热血", "value": 92}, {"name": "家族崛起", "value": 92}, {"name": "剑道", "value": 90}, {"name": "群像", "value": 88}, {"name": "轻量金手指", "value": 72}, {"name": "升级流", "value": 70}, {"name": "规则怪谈", "value": 68}, {"name": "少年成长", "value": 55}, {"name": "废土生存", "value": 42}, {"name": "凡人流", "value": 38}, {"name": "金手指", "value": 35}], "migration": {"nodes": [{"name": "传统升级流"}, {"name": "反套路群像流"}, {"name": "系统流"}, {"name": "轻量金手指"}, {"name": "废土生存"}, {"name": "规则怪谈"}, {"name": "单主角爽文"}, {"name": "家族崛起群像"}, {"name": "门派经营"}, {"name": "宗族势力经营"}, {"name": "单线复仇"}, {"name": "权谋博弈"}], "links": [{"source": "传统升级流", "target": "反套路群像流", "value": 28, "change": 35.2}, {"source": "系统流", "target": "轻量金手指", "value": 22, "change": 78.6}, {"source": "废土生存", "target": "规则怪谈", "value": 18, "change": 466.7}, {"source": "单主角爽文", "target": "家族崛起群像", "value": 15, "change": 112.3}, {"source": "门派经营", "target": "宗族势力经营", "value": 10, "change": 45.6}, {"source": "单线复仇", "target": "权谋博弈", "value": 8, "change": 22.1}]}, "migrationTimeline": {"periods": ["01月", "02月", "03月", "04月", "05月"], "flows": [{"id": "传统升级流-反套路群像流", "source": "传统升级流", "target": "反套路群像流", "values": [12, 15, 18, 24, 28]}, {"id": "系统流-轻量金手指", "source": "系统流", "target": "轻量金手指", "values": [8, 10, 12, 17, 22]}, {"id": "废土生存-规则怪谈", "source": "废土生存", "target": "规则怪谈", "values": [2, 4, 7, 12, 18]}, {"id": "单主角爽文-家族崛起群像", "source": "单主角爽文", "target": "家族崛起群像", "values": [5, 7, 9, 12, 15]}]}, "genreCloudTimeline": {"periods": ["01月", "02月", "03月", "04月", "05月"], "unit": "k", "summary": "月票榜流派热度从传统玄幻、系统流、热血逐步变化到家族崛起、规则怪谈、群像。", "clouds": [{"period": "01月", "genres": [{"name": "传统玄幻", "value": 72}, {"name": "热血", "value": 68}, {"name": "剑道", "value": 54}, {"name": "系统流", "value": 52}, {"name": "群像", "value": 42}, {"name": "家族崛起", "value": 38}]}, {"period": "02月", "genres": [{"name": "传统玄幻", "value": 78}, {"name": "热血", "value": 71}, {"name": "剑道", "value": 62}, {"name": "系统流", "value": 49}, {"name": "家族崛起", "value": 46}, {"name": "群像", "value": 49}]}, {"period": "03月", "genres": [{"name": "传统玄幻", "value": 84}, {"name": "热血", "value": 77}, {"name": "剑道", "value": 70}, {"name": "家族崛起", "value": 59}, {"name": "群像", "value": 58}, {"name": "轻量金手指", "value": 44}]}, {"period": "04月", "genres": [{"name": "传统玄幻", "value": 91}, {"name": "热血", "value": 84}, {"name": "剑道", "value": 82}, {"name": "家族崛起", "value": 77}, {"name": "群像", "value": 74}, {"name": "轻量金手指", "value": 56}]}, {"period": "05月", "genres": [{"name": "传统玄幻", "value": 96}, {"name": "热血", "value": 92}, {"name": "家族崛起", "value": 92}, {"name": "剑道", "value": 90}, {"name": "群像", "value": 88}, {"name": "轻量金手指", "value": 72}]}]}, "risingWorks": [{"id": "r1", "title": "剑来", "author": "烽火戏诸侯", "platform": "纵横中文网", "rank": 12, "rankChange": 28, "heatScore": 28500, "listType": "月票榜-2026年05月", "tags": ["剑道", "群像", "文青", "权谋"]}, {"id": "r2", "title": "家族修仙：从种植开始", "author": "青云子", "platform": "纵横中文网", "rank": 35, "rankChange": 52, "heatScore": 18200, "listType": "月票榜-2026年05月", "tags": ["家族崛起", "修仙", "种田流"]}, {"id": "r3", "title": "规则怪谈：我能完美利用规则", "author": "夜不语", "platform": "纵横中文网", "rank": 8, "rankChange": 64, "heatScore": 45200, "listType": "月票榜-2026年05月", "tags": ["规则怪谈", "无限流", "悬疑"]}, {"id": "r4", "title": "我的模拟长生路", "author": "愤怒的香蕉", "platform": "纵横中文网", "rank": 22, "rankChange": 41, "heatScore": 24500, "listType": "月票榜-2026年05月", "tags": ["轻量金手指", "修仙", "模拟器"]}, {"id": "r5", "title": "苟在妖武乱世修仙", "author": "文抄公", "platform": "纵横中文网", "rank": 18, "rankChange": 33, "heatScore": 27600, "listType": "月票榜-2026年05月", "tags": ["轻量金手指", "妖武", "苟道"]}, {"id": "r6", "title": "斗破苍穹", "author": "天蚕土豆", "platform": "纵横中文网", "rank": 5, "rankChange": 3, "heatScore": 58000, "listType": "月票榜-2026年05月", "tags": ["传统玄幻", "爽文", "热血"]}, {"id": "r7", "title": "修仙家族不能飘", "author": "青衫仗剑", "platform": "纵横中文网", "rank": 40, "rankChange": 48, "heatScore": 16200, "listType": "月票榜-2026年05月", "tags": ["家族崛起", "修仙", "经营"]}, {"id": "r8", "title": "全球规则化", "author": "黑山老鬼", "platform": "纵横中文网", "rank": 15, "rankChange": 57, "heatScore": 31500, "listType": "月票榜-2026年05月", "tags": ["规则怪谈", "末世", "进化"]}]};
+const DATA = {"generatedAt": "2026-06-06T12:39:27Z", "summary": "全标签热度趋势仅统计历史月票榜，并按作品月票总数贡献到该作品的所有标签。当前展示数据来自纵横中文网 2026年1-5月月票榜，起点暂不纳入自动采集。", "metrics": [{"id": "hot-tags", "label": "细标签数", "value": "52", "delta": 18.4, "tone": "green"}, {"id": "rising-works", "label": "上升作品", "value": "168", "delta": 21.7, "tone": "amber"}, {"id": "platforms", "label": "监测平台", "value": "1", "deltaLabel": "纵横中文网", "tone": "blue"}, {"id": "migration", "label": "流派月份", "value": "5", "delta": 9.1, "tone": "rose"}], "dataQuality": {"requiredMonths": ["20261", "20262", "20263", "20264", "20265"], "missingMonths": [], "incompleteMonths": [], "isComplete": true, "note": "月票趋势仅使用带 month 参数的历史月票榜记录。", "months": [{"month": "20261", "label": "2026年01月", "records": 200, "uniqueWorks": 200, "tagCount": 160, "heatTotal": 980000, "heatTotalK": 980, "expectedRecords": 200, "complete": true}, {"month": "20262", "label": "2026年02月", "records": 200, "uniqueWorks": 200, "tagCount": 160, "heatTotal": 1025000, "heatTotalK": 1025, "expectedRecords": 200, "complete": true}, {"month": "20263", "label": "2026年03月", "records": 200, "uniqueWorks": 200, "tagCount": 160, "heatTotal": 1102000, "heatTotalK": 1102, "expectedRecords": 200, "complete": true}, {"month": "20264", "label": "2026年04月", "records": 200, "uniqueWorks": 200, "tagCount": 160, "heatTotal": 1188000, "heatTotalK": 1188, "expectedRecords": 200, "complete": true}, {"month": "20265", "label": "2026年05月", "records": 200, "uniqueWorks": 200, "tagCount": 160, "heatTotal": 1240000, "heatTotalK": 1240, "expectedRecords": 200, "complete": true}]}, "heatCurve": {"dates": ["01月", "02月", "03月", "04月", "05月"], "unit": "k", "valueLabel": "月票", "source": "monthly-ticket", "series": [{"name": "传统玄幻", "data": [72, 78, 84, 91, 96], "description": "纵横月票榜中长期基本盘，强设定、升级体系和高燃战斗仍是主轴。"}, {"name": "家族崛起", "data": [38, 46, 59, 77, 92], "description": "从单主角爽点转向宗族、血脉、群像共振，近期上升速度最快。"}, {"name": "热血", "data": [68, 71, 77, 84, 92], "description": "常与传统玄幻、剑道、少年成长并存。"}, {"name": "剑道", "data": [54, 62, 70, 82, 90], "description": "兼具成长线、战斗爽点和辨识度。"}, {"name": "群像", "data": [42, 49, 58, 74, 88], "description": "读者对多角色并肩、家族团队和势力成长的接受度提升。"}, {"name": "轻量金手指", "data": [30, 35, 44, 56, 72], "description": "相比传统系统流，限制型金手指更受现阶段读者青睐。"}, {"name": "规则怪谈", "data": [12, 18, 29, 45, 68], "description": "从废土生存向规则怪谈的迁移趋势明显。"}]}, "hotTags": [{"tag": "传统玄幻", "heat": 96, "change": 33.3, "group": "题材", "stage": "rising", "relatedWorks": ["剑道独尊", "万古神帝", "一剑独尊", "完美世界", "斗破苍穹"]}, {"tag": "热血", "heat": 92, "change": 35.3, "group": "情绪价值", "stage": "rising", "relatedWorks": ["斗破苍穹", "完美世界", "剑来", "遮天", "大主宰"]}, {"tag": "家族崛起", "heat": 92, "change": 142.1, "group": "叙事人设", "stage": "rising", "relatedWorks": ["家族修仙：从种植开始", "修仙家族不能飘", "青莲之巅"]}, {"tag": "剑道", "heat": 90, "change": 66.7, "group": "元素机制", "stage": "rising", "relatedWorks": ["剑来", "一剑独尊", "剑道独尊", "仗剑走天涯", "剑仙之路"]}, {"tag": "群像", "heat": 88, "change": 109.5, "group": "叙事人设", "stage": "rising", "relatedWorks": ["剑来", "诡秘之主", "全职高手", "将夜", "雪中悍刀行"]}, {"tag": "轻量金手指", "heat": 72, "change": 140.0, "group": "元素机制", "stage": "rising", "relatedWorks": ["我的模拟长生路", "苟在妖武乱世修仙", "我在修仙界长命百岁"]}, {"tag": "升级流", "heat": 70, "change": -5.4, "group": "题材", "stage": "stable", "relatedWorks": ["斗破苍穹", "修罗武神", "武动乾坤", "大主宰"]}, {"tag": "规则怪谈", "heat": 68, "change": 466.7, "group": "题材", "stage": "rising", "relatedWorks": ["规则怪谈：我能完美利用规则", "雾都规则档案", "全球规则化"]}, {"tag": "废土生存", "heat": 42, "change": -12.5, "group": "题材", "stage": "cooling", "relatedWorks": ["全球废土：开局一座城", "废土生存指南", "废土之上"]}, {"tag": "凡人流", "heat": 38, "change": 8.6, "group": "题材", "stage": "stable", "relatedWorks": ["凡人修仙传", "凡人修仙记", "修真世界"]}, {"tag": "金手指", "heat": 35, "change": -25.5, "group": "元素机制", "stage": "cooling", "relatedWorks": ["系统赋我长生", "神话版三国", "我能提取熟练度"]}, {"tag": "系统流", "heat": 30, "change": -42.3, "group": "题材", "stage": "cooling", "relatedWorks": ["系统赋我长生", "神话版三国", "超级神基因"]}], "platformCompare": [{"platform": "纵横中文网", "heat": 100, "works": 200, "topTags": ["传统玄幻", "热血", "家族崛起", "剑道", "群像", "轻量金手指"], "status": "active"}], "wordCloud": [{"name": "传统玄幻", "value": 96}, {"name": "热血", "value": 92}, {"name": "家族崛起", "value": 92}, {"name": "剑道", "value": 90}, {"name": "群像", "value": 88}, {"name": "轻量金手指", "value": 72}, {"name": "升级流", "value": 70}, {"name": "规则怪谈", "value": 68}, {"name": "少年成长", "value": 55}, {"name": "废土生存", "value": 42}, {"name": "凡人流", "value": 38}, {"name": "金手指", "value": 35}], "migration": {"nodes": [{"name": "传统升级流"}, {"name": "反套路群像流"}, {"name": "系统流"}, {"name": "轻量金手指"}, {"name": "废土生存"}, {"name": "规则怪谈"}, {"name": "单主角爽文"}, {"name": "家族崛起群像"}, {"name": "门派经营"}, {"name": "宗族势力经营"}, {"name": "单线复仇"}, {"name": "权谋博弈"}], "links": [{"source": "传统升级流", "target": "反套路群像流", "value": 28, "change": 35.2}, {"source": "系统流", "target": "轻量金手指", "value": 22, "change": 78.6}, {"source": "废土生存", "target": "规则怪谈", "value": 18, "change": 466.7}, {"source": "单主角爽文", "target": "家族崛起群像", "value": 15, "change": 112.3}, {"source": "门派经营", "target": "宗族势力经营", "value": 10, "change": 45.6}, {"source": "单线复仇", "target": "权谋博弈", "value": 8, "change": 22.1}]}, "migrationTimeline": {"periods": ["01月", "02月", "03月", "04月", "05月"], "flows": [{"id": "传统升级流-反套路群像流", "source": "传统升级流", "target": "反套路群像流", "values": [12, 15, 18, 24, 28]}, {"id": "系统流-轻量金手指", "source": "系统流", "target": "轻量金手指", "values": [8, 10, 12, 17, 22]}, {"id": "废土生存-规则怪谈", "source": "废土生存", "target": "规则怪谈", "values": [2, 4, 7, 12, 18]}, {"id": "单主角爽文-家族崛起群像", "source": "单主角爽文", "target": "家族崛起群像", "values": [5, 7, 9, 12, 15]}]}, "genreCloudTimeline": {"periods": ["01月", "02月", "03月", "04月", "05月"], "unit": "k", "summary": "月票榜流派热度从传统玄幻、系统流、热血逐步变化到家族崛起、规则怪谈、群像。", "clouds": [{"period": "01月", "genres": [{"name": "传统玄幻", "value": 72}, {"name": "热血", "value": 68}, {"name": "剑道", "value": 54}, {"name": "系统流", "value": 52}, {"name": "群像", "value": 42}, {"name": "家族崛起", "value": 38}]}, {"period": "02月", "genres": [{"name": "传统玄幻", "value": 78}, {"name": "热血", "value": 71}, {"name": "剑道", "value": 62}, {"name": "系统流", "value": 49}, {"name": "家族崛起", "value": 46}, {"name": "群像", "value": 49}]}, {"period": "03月", "genres": [{"name": "传统玄幻", "value": 84}, {"name": "热血", "value": 77}, {"name": "剑道", "value": 70}, {"name": "家族崛起", "value": 59}, {"name": "群像", "value": 58}, {"name": "轻量金手指", "value": 44}]}, {"period": "04月", "genres": [{"name": "传统玄幻", "value": 91}, {"name": "热血", "value": 84}, {"name": "剑道", "value": 82}, {"name": "家族崛起", "value": 77}, {"name": "群像", "value": 74}, {"name": "轻量金手指", "value": 56}]}, {"period": "05月", "genres": [{"name": "传统玄幻", "value": 96}, {"name": "热血", "value": 92}, {"name": "家族崛起", "value": 92}, {"name": "剑道", "value": 90}, {"name": "群像", "value": 88}, {"name": "轻量金手指", "value": 72}]}]}, "risingWorks": [{"id": "r1", "title": "剑来", "author": "烽火戏诸侯", "platform": "纵横中文网", "rank": 12, "rankChange": 28, "heatScore": 28500, "listType": "月票榜-2026年05月", "tags": ["剑道", "群像", "文青", "权谋"]}, {"id": "r2", "title": "家族修仙：从种植开始", "author": "青云子", "platform": "纵横中文网", "rank": 35, "rankChange": 52, "heatScore": 18200, "listType": "月票榜-2026年05月", "tags": ["家族崛起", "修仙", "种田流"]}, {"id": "r3", "title": "规则怪谈：我能完美利用规则", "author": "夜不语", "platform": "纵横中文网", "rank": 8, "rankChange": 64, "heatScore": 45200, "listType": "月票榜-2026年05月", "tags": ["规则怪谈", "无限流", "悬疑"]}, {"id": "r4", "title": "我的模拟长生路", "author": "愤怒的香蕉", "platform": "纵横中文网", "rank": 22, "rankChange": 41, "heatScore": 24500, "listType": "月票榜-2026年05月", "tags": ["轻量金手指", "修仙", "模拟器"]}, {"id": "r5", "title": "苟在妖武乱世修仙", "author": "文抄公", "platform": "纵横中文网", "rank": 18, "rankChange": 33, "heatScore": 27600, "listType": "月票榜-2026年05月", "tags": ["轻量金手指", "妖武", "苟道"]}, {"id": "r6", "title": "斗破苍穹", "author": "天蚕土豆", "platform": "纵横中文网", "rank": 5, "rankChange": 3, "heatScore": 58000, "listType": "月票榜-2026年05月", "tags": ["传统玄幻", "爽文", "热血"]}, {"id": "r7", "title": "修仙家族不能飘", "author": "青衫仗剑", "platform": "纵横中文网", "rank": 40, "rankChange": 48, "heatScore": 16200, "listType": "月票榜-2026年05月", "tags": ["家族崛起", "修仙", "经营"]}, {"id": "r8", "title": "全球规则化", "author": "黑山老鬼", "platform": "纵横中文网", "rank": 15, "rankChange": 57, "heatScore": 31500, "listType": "月票榜-2026年05月", "tags": ["规则怪谈", "末世", "进化"]}]};
 const KNOWN_UIDS = {"诡秘之主": "987a2b45c6bd2baa73d750f13daf15b63c20145de2e85fff22ada96ad3d8b27b", "我有一座恐怖屋": "26d4613826eb8819a9a601cfb88eb7621b0e6cc5c46ffefa96b5dea22ca938dc", "修罗武神": "f551b43b941bf7f47d6006792b26da44b8554945c72766133cb0c59771f48c89", "凡人修仙传": "22ed60b7b27cf4c8b77c1439cb7a9d82eb4667f6eafab681bcd415e18adbd0a4", "仙王的日常生活": "587986904db3db77b83e2d7b49165f2f6e9ec1b6552b621e340695f21c240d8c", "斗破苍穹": "5ee58c6e2a50c7b194ab73eaf787590384344a765ff1b682ec15d962daae2dee", "剑来": "8c2c257caf7438c0c5561c5584200deea9b11dd91283958002968646deeeec2b", "全职高手": "261d26f98be24a9423afba401b0fef88373220a3212166615613ad83b726d7fa"};
 const API = {
   trend: 'http://127.0.0.1:8001',
@@ -284,6 +343,7 @@ let currentNovelUid = null;
 let currentNovelTitle = null;
 const CHARTS = {};
 const AVOID_TAGS = ['后宫', '烂尾', '虐主', '狗血', '节奏慢'];
+let _msgSeq = 0;
 
 // ============================================================
 // 主题
@@ -579,275 +639,14 @@ function renderTrendDashboard() {
 // Tab 3: AI 推荐
 // ============================================================
 function initAvoidTags() {
+  // 避雷标签已移至 RAG 引擎上下文处理
   const container = document.getElementById('avoidTags');
-  AVOID_TAGS.forEach(tag => {
-    const span = document.createElement('span');
-    span.className = 'avoid-tag';
-    span.textContent = tag;
-    span.onclick = function() { this.classList.toggle('selected'); };
-    container.appendChild(span);
-  });
+  if (container) container.style.display = 'none';
 }
 
 function getSelectedAvoidTags() {
   return Array.from(document.querySelectorAll('.avoid-tag.selected')).map(s => s.textContent);
 }
-
-// ============================================================
-// 意图分析
-// ============================================================
-
-const INQUIRY_PATTERNS = [
-  "是什么", "怎么样", "好看吗", "好不好看", "评价", "介绍",
-  "是什么类型", "讲什么", "什么类型", "好看不", "值得看",
-  "完结了吗", "还在连载", "作者是谁", "谁写的", "多少章",
-  "讲的什么", "好不好", "有没有毒", "雷不雷", "爽不爽",
-  "大概讲", "剧情", "内容",
-];
-const GREETING_PATTERNS = [
-  "你好", "嗨", "谢谢", "感谢", "再见", "拜拜", "早上好",
-  "晚上好", "下午好", "hello", "hi", "在吗", "hey",
-];
-const RECOMMEND_PATTERNS = [
-  "推荐", "有没有", "找一本", "想看", "帮我找", "求书",
-  "书荒", "类似", "有没有类似", "找书", "来一本", "给推荐",
-  "能不能推荐", "有什么好", "哪些", "有没有什么",
-];
-const CHAT_PATTERNS = [
-  // 自指/能力询问
-  "你还能", "你能做", "你会", "你有什么", "你的功能", "你的作用",
-  "你能干什么", "你能干嘛", "你会什么", "你会干嘛",
-  "你是谁", "你叫什么", "你是干什么的",
-  // 非书籍闲聊
-  "讲个笑话", "聊天", "聊会", "唠嗑", "无聊", "有意思",
-  "天气", "今天心情", "怎么办", "好烦", "好累",
-  "有什么用", "没什么用", "不智能", "太笨",
-  // 元问题
-  "除了推荐", "除了找书", "除了搜索", "还有别的", "还有其他",
-  "还能做", "还可以",
-  // 反馈/纠错/质疑（优先级高于推荐，避免 "为什么推荐了5本" 被当成推荐请求）
-  "为什么", "你怎么", "不是让你", "我没说", "我没让",
-  "谁让你", "谁让你", "我没叫你", "你搞错", "你理解错",
-  "我说的是", "我的意思是", "不是这个", "不对",
-  "别推荐", "不要推荐", "别再推", "不是推荐",
-];
-
-function detectIntent(query) {
-  const q = query.toLowerCase();
-
-  // 1. 先检测问候
-  for (const p of GREETING_PATTERNS) {
-    if (q.includes(p)) return "greeting";
-  }
-
-  // 2. 检测闲聊/非书籍意图（优先级高于书籍推荐）
-  for (const p of CHAT_PATTERNS) {
-    if (q.includes(p)) return "chat";
-  }
-
-  // 3. 检测书籍询问
-  for (const p of INQUIRY_PATTERNS) {
-    if (q.includes(p)) return "book_inquiry";
-  }
-
-  // 4. 检测推荐请求
-  for (const p of RECOMMEND_PATTERNS) {
-    if (q.includes(p)) return "recommendation";
-  }
-
-  // 5. 无明确信号 → 默认为闲聊
-  return "chat";
-}
-
-// ============================================================
-// 对话响应生成
-// ============================================================
-
-const CHAT_RESPONSES = {
-  greeting: [
-    "你好！我是小说推荐助手。你可以问我：<br>• \"推荐好看的悬疑小说\"<br>• \"诡秘之主好看吗？\"<br>• \"有没有类似凡人修仙传的书\"<br>• \"最近什么类型的小说比较火\"",
-    "嗨！想找什么类型的小说呢？悬疑、修仙、科幻、玄幻……或者直接告诉我你喜欢的书名，我帮你找类似的~",
-    "在的！有什么阅读需求尽管说，比如想看什么类型、要完结的还是连载的、有哪些雷点需要避开。",
-  ],
-  capability: [
-    "我的主要功能是帮你发现和了解网络小说：<br><br>📚 <b>智能推荐</b> — 告诉我你想看的类型/风格，我帮你找书<br>🔍 <b>书籍查询</b> — 想知道某本书的类型、评价、标签？直接问我<br>🛡️ <b>避雷过滤</b> — 选中下方的避雷标签，帮你排除后宫、烂尾等雷区<br>📊 <b>舆情分析</b> — 点击书名可以看到详细的评分和评论分析<br><br>还有其他功能在开发中，比如跨平台价格对比、更新提醒等。有什么想试试的吗？",
-    "我不仅可以推荐书籍，还能帮你：<br>• 查询某本小说的类型、标签、简介<br>• 找类似风格的作品<br>• 根据避雷标签过滤不合适的书<br>• 查看小说的综合评分和优缺点<br><br>试试对我说\"推荐玄幻爽文\"或者\"诡秘之主完结了吗\"？",
-  ],
-  chat: [
-    "我主要是个小说推荐助手~ 不过聊聊天也挺好的！你可以试试问我：<br>• \"推荐几本轻松搞笑的小说\"<br>• \"最近什么类型的书比较火\"<br>• \"凡人修仙传值得看吗\"",
-    "哈哈，我懂的确实还不多，不过找书我可是认真的！告诉我你的阅读偏好，我帮你精准推荐~",
-    "聊这个我也不太擅长😂 不过如果你想知道什么类型的小说好看，或者某本书的评价如何，我可以帮你！",
-  ],
-  help: [
-    "你可以这样跟我聊天：<br><br>📖 <b>求推荐</b>：\"推荐克苏鲁风格的悬疑小说\"<br>🔎 <b>查书籍</b>：\"绝色生骄是什么类型的小说\"<br>📝 <b>问评价</b>：\"诡秘之主好看吗\"<br>🔄 <b>找类似</b>：\"有没有类似凡人修仙传的书\"<br>🛡️ <b>避雷</b>：先点下方的标签，再问我推荐~<br><br>试试看？",
-  ],
-  fallback: [
-    "这个我还不太会回答😅 不过我擅长帮你找小说！<br>想看点什么呢？悬疑、修仙、玄幻、轻松搞笑……",
-  ],
-};
-
-function pickRandom(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-// 从查询中解析用户期望的推荐数量
-// 支持: 一本/1本/一部 → 1, 两本/两部/2本 → 2, 三本/三部/3本 → 3, ...
-//       几本/几部/一些 → 0 (表示未指定具体数字)
-// 注意: "第一本"/"第二本"是序数指代，不是数量，不参与数量解析
-const _CN_NUM = { "一":1,"二":2,"两":2,"三":3,"四":4,"五":5,"六":6,"七":7,"八":8,"九":9,"十":10 };
-function parseQuantity(query) {
-  const q = query.toLowerCase();
-  // 匹配: X本, X部, X个, X篇 (但排除"第X本/第X个"等序数指代)
-  const re = /(?:^|[^第])([一二两三四五六七八九十\d]+)\s*[本部门部篇个]/g;
-  let match;
-  while ((match = re.exec(q)) !== null) {
-    const numStr = match[1];
-    if (/^\d+$/.test(numStr)) {
-      const n = parseInt(numStr, 10);
-      if (n >= 1 && n <= 50) return n;
-    } else if (_CN_NUM[numStr]) {
-      return _CN_NUM[numStr];
-    }
-  }
-  // 模糊数量词
-  if (/几[本部门篇个]/.test(q)) return 0; // 几本 → 不限定，返回0
-  return 0; // 0 = 未指定
-}
-
-// ============================================================
-// 多轮对话上下文 — 记录上一轮推荐的书名，解析指代表达式
-// ============================================================
-
-let lastDisplayedBooks = [];
-
-function trackDisplayedBooks(results) {
-  // 从搜索结果中提取书名列表（按展示顺序）
-  const titles = [];
-  for (const r of (results || [])) {
-    const t = (r.metadata && r.metadata.title) ? r.metadata.title : '';
-    if (t && !titles.includes(t)) titles.push(t);
-  }
-  if (titles.length > 0) lastDisplayedBooks = titles;
-}
-
-function resolveBookReferences(query) {
-  // 检测"第X本/第X个/这本书/那本书"等指代表达式，
-  // 替换为具体的书名以增强检索准确性
-  if (!lastDisplayedBooks || lastDisplayedBooks.length === 0) return query;
-
-  const cnOrdinals = { "一":1,"二":2,"三":3,"四":4,"五":5,"六":6,"七":7,"八":8,"九":9,"十":10 };
-  let modified = query;
-
-  // 替换 "第X本/第X个" 为实际书名
-  modified = modified.replace(/第\s*([一二三四五六七八九十\d]+)\s*[本个]/g, (fullMatch, numStr) => {
-    let n;
-    if (/^\d+$/.test(numStr)) {
-      n = parseInt(numStr, 10);
-    } else {
-      n = cnOrdinals[numStr] || 0;
-    }
-    if (n >= 1 && n <= lastDisplayedBooks.length) {
-      return '《' + lastDisplayedBooks[n - 1] + '》';
-    }
-    return fullMatch;
-  });
-
-  // 替换 "这[本个]书"/"那[本个]书" → 第一本书
-  modified = modified.replace(/这[本个]书|那[本个]书|这[本个](?!书)|那[本个](?!书)/g, (fullMatch) => {
-    return '《' + lastDisplayedBooks[0] + '》';
-  });
-
-  return modified;
-}
-
-function getChatResponse(query) {
-  const q = query.toLowerCase();
-  // 反馈/纠错 — 用户指出系统的问题
-  if (/为什么.*推荐|为什么.*结果|不是让你|谁让你|你搞错|你理解错|我说的是|我的意思|别推荐|不要推荐|太快|太慢/.test(q)) {
-    return "抱歉理解有误！让我再试一次 — 你可以直接告诉我：想看什么类型、多少本、有什么雷点要避开，我会尽量准确地帮你找书。";
-  }
-  if (/你能|你会|功能|作用|干什么|干嘛|除了|还有其他|还能做|还可以做/.test(q)) {
-    return pickRandom(CHAT_RESPONSES.capability);
-  }
-  if (/帮助|怎么用|不会用|help|怎么操作/.test(q)) {
-    return pickRandom(CHAT_RESPONSES.help);
-  }
-  if (/无聊|聊天|唠嗑|心情|烦|累/.test(q)) {
-    return pickRandom(CHAT_RESPONSES.chat);
-  }
-  return pickRandom(CHAT_RESPONSES.chat);
-}
-
-function generateBookDetailHtml(card) {
-  const m = card.metadata || {};
-  const tags = card.tags || [];
-  const intro = card.intro || "";
-  const status = card.status || "unknown";
-  const score = card.relevance_score || 0;
-  const safe = card.safe_check || {};
-  const warnings = safe.warnings || [];
-
-  const statusMap = { completed: "已完结", ongoing: "连载中", unknown: "未知" };
-  const statusText = statusMap[status] || status;
-
-  let html = `<div style="margin-bottom:12px">`;
-  html += `<strong style="font-size:16px;color:var(--accent)">📖 ${m.title || "未知"}</strong>`;
-  html += `<span style="margin-left:8px;font-size:12px;color:var(--text2)">${m.platform || ""} · ${statusText}</span>`;
-  html += `</div>`;
-
-  if (intro) {
-    html += `<p style="line-height:1.8;margin-bottom:10px">📝 ${intro.length > 200 ? intro.slice(0,200)+'...' : intro}</p>`;
-  }
-
-  if (tags.length > 0) {
-    html += `<p style="margin-bottom:8px">🏷️ 标签：${tags.map(t => `<span class="tag-chip">${t}</span>`).join(" ")}</p>`;
-  }
-
-  if (warnings.length > 0) {
-    html += `<p style="color:var(--rose);font-size:13px">⚠️ 注意：${warnings.join(" · ")}</p>`;
-  }
-
-  html += `<p style="font-size:11px;color:var(--text2);margin-top:8px">💡 点击 <span style="color:var(--accent);cursor:pointer;text-decoration:underline" onclick="openReview('${card.uid}','${m.title}')">查看详细评论分析</span></p>`;
-  return html;
-}
-
-function generateRecommendHtml(cards, query, isGeneric) {
-  let html = "";
-  const hasKeywords = cards.some(c => (c.relevance_score || 0) > 0.5);
-
-  if (cards.length === 0) {
-    html += "<p>😕 没有找到匹配的小说。试试：</p>";
-    html += "<p style=\"font-size:13px;color:var(--text2)\">• 换一种类型描述，比如\"悬疑\"、\"修仙\"、\"轻松搞笑\"<br>• 告诉我你喜欢的书名，我帮你找类似的<br>• 检查是否选中了过多避雷标签</p>";
-    return html;
-  }
-
-  if (isGeneric || !hasKeywords) {
-    html += `<p>好的！这里有一些近期比较热门的小说，你看看有没有感兴趣的：</p>`;
-  } else {
-    html += `<p>根据你的需求，找到了 <strong>${cards.length}</strong> 本相关小说：</p>`;
-  }
-
-  html += `<div class="result-cards">`;
-  cards.forEach(card => {
-    const m = card.metadata || {};
-    const safe = card.safe_check || {};
-    const passed = safe.passed !== false;
-    const warnings = safe.warnings || [];
-    const tags = (card.tags || []).slice(0, 3);
-    html += `<div class="result-card" onclick="openReview('${card.uid}', '${m.title}')" style="${!passed ? 'opacity:0.6' : ''}">
-      <div class="title">${passed ? '✅' : '⚠️'} ${m.title || '未知'}</div>
-      <div class="meta">平台: ${m.platform || '未知'} · 相关度: ${(card.relevance_score || 0).toFixed(2)}${tags.length ? ' · ' + tags.map(t => `<span class="tag-chip">${t}</span>`).join(" ") : ''}</div>
-      <div class="reason">${card.match_reason || ''}</div>
-      ${warnings.length ? '<div class="warning">⚠️ ' + warnings.join(' · ') + '</div>' : ''}
-    </div>`;
-  });
-  html += `</div><p style="font-size:11px;color:var(--text2);margin-top:8px">💡 点击小说卡片查看详细评论分析 &nbsp;|&nbsp; 还没找到？继续跟我说说你的具体偏好~</p>`;
-  return html;
-}
-
-// ============================================================
-// 发送消息
-// ============================================================
 
 async function sendMessage() {
   const input = document.getElementById('chatInput');
@@ -863,91 +662,31 @@ async function sendMessage() {
   input.value = '';
 
   // 添加 AI 加载消息
-  const loadingId = appendMessage('assistant', '<div class="spinner"></div> 正在思考...');
+  const loadingId = appendMessage('assistant', '<div class="spinner"></div> 正在搜索...');
 
-  const intent = detectIntent(query);
-
-  // 问候和闲聊直接文本回复，不调搜索 API
-  if (intent === "greeting") {
-    updateMessage(loadingId, pickRandom(CHAT_RESPONSES.greeting));
-    input.disabled = false;
-    btn.disabled = false;
-    setTimeout(() => input.focus(), 100);
-    return;
-  }
-
-  if (intent === "chat") {
-    updateMessage(loadingId, getChatResponse(query));
-    input.disabled = false;
-    btn.disabled = false;
-    setTimeout(() => input.focus(), 100);
-    return;
-  }
-
-  // 以下两个意图需要调搜索 API：book_inquiry / recommendation
   const avoidTags = getSelectedAvoidTags();
 
   try {
-    const userQty = parseQuantity(query);
-    // 解析指代表达式：把"第一本"替换为上一轮推荐的实际书名
-    const searchQuery = resolveBookReferences(query);
-    // 用户明确说了 N 本就请求 N 本；否则用默认值
-    const defaultK = (intent === "book_inquiry") ? 10 : 5;
-    const topK = userQty > 0 ? Math.min(userQty + 2, 50) : defaultK;
-    const displayLimit = userQty > 0 ? userQty : 5;
-    const resp = await fetch(`${API.search}/api/v1/search/semantic`, {
+    const resp = await fetch(`http://127.0.0.1:8003/api/v1/sentiment/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ query: searchQuery, safe_tags: avoidTags, top_k: topK })
+      body: JSON.stringify({ query, top_k: 5, session_id: 'dashboard-ai-' + Date.now() })
     });
     if (!resp.ok) throw new Error('API error: ' + resp.status);
     const result = await resp.json();
 
-    // 记录本轮展示的书名，供下一轮指代解析使用
-    trackDisplayedBooks(result.results);
-
-    const allResults = result.results || [];
-    const relevantResults = allResults.filter(c => (c.relevance_score || 0) > 0.45);
-    const cards = relevantResults.slice(0, displayLimit);
-
-    let html = "";
-    if (result.query_rewrite) {
-      html += `<p style="font-size:13px;color:var(--text2);margin-bottom:8px">🔍 ${result.query_rewrite}</p>`;
+    // 显示 LLM 生成的回复
+    let html = `<div style="line-height:1.7">${result.answer.replace(/\n/g, '<br>')}</div>`;
+    if (result.sources && result.sources.length > 0) {
+      html += `<div style="font-size:11px;color:var(--text2);margin-top:8px;padding-top:6px;border-top:1px solid var(--border)">`;
+      html += `📚 参考来源: ${result.sources.join('、')}`;
+      html += `</div>`;
     }
-
-    if (intent === "book_inquiry" && cards.length > 0 && cards[0].relevance_score >= 0.55) {
-      // 询问特定书籍：展示书籍详情
-      const topCard = cards[0];
-      html += generateBookDetailHtml(topCard);
-      if (cards.length > 1 && cards[0].relevance_score - cards[1].relevance_score < 0.10) {
-        html += `<p style="margin-top:10px;font-size:13px;color:var(--text2)">你可能也在找这些书：</p>`;
-        html += `<div class="result-cards">`;
-        cards.slice(1, 4).forEach(card => {
-          const m = card.metadata || {};
-          html += `<div class="result-card" onclick="openReview('${card.uid}', '${m.title}')">
-            <div class="title">📗 ${m.title || '未知'}</div>
-            <div class="meta">${m.platform || ''} · 相关度: ${(card.relevance_score || 0).toFixed(2)}</div>
-          </div>`;
-        });
-        html += "</div>";
-      }
-    } else if (cards.length === 0) {
-      html += "<p>😕 没有找到匹配的小说。</p>";
-      html += "<p style=\"font-size:13px;color:var(--text2)\">试试换个描述方式，或者直接告诉我你想看什么类型~</p>";
-    } else {
-      // 推荐模式
-      const genericPatterns = ["还有没有", "还有什么", "其他的", "别的书", "有没有别的", "再推荐", "换一批", "换一换", "更多"];
-      const isGeneric = genericPatterns.some(p => query.toLowerCase().includes(p));
-      html += generateRecommendHtml(cards, query, isGeneric);
-    }
-
     updateMessage(loadingId, html);
   } catch (e) {
-    updateMessage(loadingId, `<p>⚠️ AI 推荐服务不可用 (端口 8002)</p>
-      <p style="font-size:12px;color:var(--text2)">请先启动 Safe-Search 服务：<br>
-      <code>cd "Safe-Search Architect" && uvicorn src.safe_search.api:app --port 8002</code><br>
-      或使用 Mock 模式：<br>
-      <code>uvicorn src.safe_search.mock_server:app --port 8002</code></p>`);
+    updateMessage(loadingId, `<p>⚠️ AI 推荐服务不可用 (端口 8003)</p>
+      <p style="font-size:12px;color:var(--text2)">请先启动 Sentiment Critic 服务：<br>
+      <code>cd "Sentiment Critic" && uvicorn sentiment_critic.sentiment_api:app --port 8003</code></p>`);
   }
 
   input.disabled = false;
@@ -955,13 +694,12 @@ async function sendMessage() {
   setTimeout(() => input.focus(), 100);
 }
 
-let _msgCounter = 0;
 function appendMessage(role, html) {
   const container = document.getElementById('chatMessages');
   const div = document.createElement('div');
   div.className = 'chat-msg ' + role;
   div.innerHTML = `<div class="avatar">${role === 'user' ? '👤' : '🤖'}</div><div class="bubble">${html}</div>`;
-  div.id = 'msg-' + Date.now() + '-' + (_msgCounter++);
+  div.id = 'msg-' + (++_msgSeq);
   container.appendChild(div);
   scrollChatBottom();
   return div.id;
@@ -978,6 +716,230 @@ function updateMessage(id, html) {
 function scrollChatBottom() {
   const container = document.getElementById('chatMessages');
   if (container) container.scrollTop = container.scrollHeight;
+  const charContainer = document.getElementById('characterChatMessages');
+  if (charContainer) charContainer.scrollTop = charContainer.scrollHeight;
+}
+
+// ============================================================
+// Tab 4: 角色对话
+// ============================================================
+let CURRENT_CHARACTER = null;
+let IS_CUSTOM_CHARACTER = false;
+let CUSTOM_CHARACTER = null;
+
+function scrollCharacterChatBottom() {
+  const container = document.getElementById('characterChatMessages');
+  if (container) container.scrollTop = container.scrollHeight;
+}
+
+async function loadCharacterList() {
+  const container = document.getElementById('characterSelector');
+  const loading = document.getElementById('characterLoading');
+  const info = document.getElementById('characterInfo');
+
+  if (container.querySelectorAll('.char-btn').length > 0) return;
+
+  loading.style.display = 'block';
+  try {
+    const resp = await fetch(`${API.sentiment}/api/v1/sentiment/character/list`);
+    if (!resp.ok) throw new Error('API error');
+    const data = await resp.json();
+    loading.style.display = 'none';
+
+    const chars = data.characters || [];
+    chars.forEach(c => {
+      const btn = document.createElement('button');
+      btn.className = 'char-btn';
+      btn.innerHTML = `${c.avatar_emoji || '🎭'} ${c.name}`;
+      btn.dataset.id = c.id;
+      btn.title = `出自《${c.novel}》 - ${(c.personality || []).join('、')}`;
+      btn.onclick = () => selectCharacter(c.id, chars);
+      container.appendChild(btn);
+    });
+
+    if (!document.getElementById('charBtnStyle')) {
+      const style = document.createElement('style');
+      style.id = 'charBtnStyle';
+      style.textContent = `
+        .char-btn { padding: 6px 14px; border: 1px solid var(--border); border-radius: 999px;
+          background: var(--card-bg); color: var(--text); cursor: pointer; font-size: 13px;
+          transition: all .2s; }
+        .char-btn:hover { border-color: var(--accent); background: var(--accent-light); }
+        .char-btn.active { border-color: var(--accent); background: var(--accent-light);
+          font-weight: 600; color: var(--accent); }
+        .char-message-avatar { width: 36px; height: 36px; border-radius: 50%; display: flex;
+          align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+          background: var(--bg); }
+      `;
+      document.head.appendChild(style);
+    }
+  } catch (e) {
+    loading.innerHTML = '<span style="font-size:13px;color:var(--rose);">⚠️ 角色服务不可用 (端口 8003)</span>';
+  }
+}
+
+function selectCharacter(id, chars) {
+  document.querySelectorAll('.char-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.char-btn[data-id="${id}"]`)?.classList.add('active');
+
+  // 清除自定义角色模式
+  IS_CUSTOM_CHARACTER = false;
+  CUSTOM_CHARACTER = null;
+
+  const char = chars.find(c => c.id === id);
+  if (!char) return;
+
+  CURRENT_CHARACTER = char;
+  document.getElementById('charAvatar').textContent = char.avatar_emoji || '🎭';
+  document.getElementById('charName').textContent = char.name;
+  document.getElementById('charNovel').textContent = char.novel;
+  document.getElementById('charPersonality').textContent = '『' + (char.personality || []).join('、') + '』';
+  document.getElementById('characterInfo').style.display = 'block';
+
+  document.getElementById('characterChatInput').disabled = false;
+  document.getElementById('charSendBtn').disabled = false;
+  document.getElementById('characterChatInput').placeholder = `对 ${char.name} 说点什么...`;
+  document.getElementById('characterChatInput').focus();
+
+  appendCharacterMessage('assistant', `我已经准备好扮演${char.name}了！你可以开始和我聊天了。`);
+}
+
+async function startCustomCharacter() {
+  const name = document.getElementById('customCharName').value.trim();
+  const novel = document.getElementById('customCharNovel').value.trim();
+  const errorEl = document.getElementById('customCharError');
+
+  if (!name || !novel) {
+    errorEl.textContent = '请填写角色名和小说名';
+    errorEl.style.display = 'inline';
+    return;
+  }
+  errorEl.style.display = 'none';
+
+  // 取消选择预定义角色
+  document.querySelectorAll('.char-btn').forEach(b => b.classList.remove('active'));
+
+  IS_CUSTOM_CHARACTER = true;
+  CUSTOM_CHARACTER = { name, novel };
+  CURRENT_CHARACTER = null;
+
+  document.getElementById('charAvatar').textContent = '📖';
+  document.getElementById('charName').textContent = name;
+  document.getElementById('charNovel').textContent = novel;
+  document.getElementById('charPersonality').textContent = '『自定义角色』';
+  document.getElementById('characterInfo').style.display = 'block';
+
+  document.getElementById('characterChatInput').disabled = false;
+  document.getElementById('charSendBtn').disabled = false;
+  document.getElementById('characterChatInput').placeholder = `对 ${name} 说点什么...`;
+  document.getElementById('characterChatInput').focus();
+
+  appendCharacterMessage('assistant',
+    `好的，我来扮演《${novel}》中的 **${name}**！你可以开始和我聊天了。<br>` +
+    `（如果知识库中没有收录这部小说，会返回错误信息）`);
+}
+
+async function sendCharacterMessage() {
+  const input = document.getElementById('characterChatInput');
+  const query = input.value.trim();
+  if (!query || (!CURRENT_CHARACTER && !CUSTOM_CHARACTER)) return;
+
+  const btn = document.getElementById('charSendBtn');
+  input.disabled = true;
+  btn.disabled = true;
+
+  appendCharacterMessage('user', query);
+  input.value = '';
+
+  const loadingId = appendCharacterMessage('assistant', '<div class="spinner"></div> 思考中...');
+
+  try {
+    let url, body;
+    if (IS_CUSTOM_CHARACTER && CUSTOM_CHARACTER) {
+      url = `${API.sentiment}/api/v1/sentiment/character/chat-by-name`;
+      body = JSON.stringify({
+        query,
+        character_name: CUSTOM_CHARACTER.name,
+        novel_name: CUSTOM_CHARACTER.novel,
+        top_k: 5,
+        session_id: 'dashboard-custom',
+      });
+    } else {
+      url = `${API.sentiment}/api/v1/sentiment/character/chat`;
+      body = JSON.stringify({
+        query,
+        character_id: CURRENT_CHARACTER.id,
+        top_k: 5,
+        session_id: 'dashboard-' + CURRENT_CHARACTER.id,
+      });
+    }
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body
+    });
+    if (!resp.ok) {
+      const errData = await resp.json().catch(() => ({}));
+      throw new Error(errData.detail || 'API error: ' + resp.status);
+    }
+    const result = await resp.json();
+    updateCharacterMessage(loadingId, result.answer);
+    // 检测模式并更新状态标签
+    const badge = document.getElementById('charModeLabel');
+    if (badge) {
+      if (result.method === 'mock' || result.method === 'mock_dynamic') {
+        badge.textContent = '⚡ Mock 模式 (固定回复，非 AI)';
+        badge.style.background = '#fff3cd';
+        badge.style.color = '#856404';
+      } else if (result.method && result.method.includes('rag')) {
+        badge.textContent = '🤖 LLM 模式 (DeepSeek AI 生成)';
+        badge.style.background = '#d4edda';
+        badge.style.color = '#155724';
+      } else if (result.method && result.method.includes('heuristic')) {
+        badge.textContent = '⚠️ 降级模式 (LLM 不可用，模板回复)';
+        badge.style.background = '#f8d7da';
+        badge.style.color = '#721c24';
+      }
+    }
+  } catch (e) {
+    if (IS_CUSTOM_CHARACTER) {
+      updateCharacterMessage(loadingId,
+        '<p>⚠️ ' + e.message + '</p>' +
+        '<p style="font-size:12px;color:var(--text2)">该小说可能未被知识库收录，请检查小说名是否正确。<br>' +
+        '试试已有的小说：诡秘之主、凡人修仙传、我有一座恐怖屋、修罗武神、仙王的日常生活、斗破苍穹、剑来</p>');
+    } else {
+      updateCharacterMessage(loadingId,
+        '<p>⚠️ 角色对话服务暂不可用 (端口 8003)</p>' +
+        '<p style="font-size:12px;color:var(--text2)">请先启动 Sentiment Critic 服务：<br>' +
+        '<code>cd "Sentiment Critic" && uvicorn sentiment_critic.sentiment_api:app --port 8003</code><br>' +
+        '或使用 Mock 模式：<br>' +
+        '<code>uvicorn sentiment_critic.mock_server:app --port 8003</code></p>');
+    }
+  }
+
+  input.disabled = false;
+  btn.disabled = false;
+  setTimeout(() => input.focus(), 100);
+}
+
+function appendCharacterMessage(role, html) {
+  const container = document.getElementById('characterChatMessages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + role;
+  const avatar = role === 'user' ? '👤' : (IS_CUSTOM_CHARACTER ? '📖' : (CURRENT_CHARACTER?.avatar_emoji || '🎭'));
+  div.innerHTML = '<div class="char-message-avatar">' + avatar + '</div><div class="bubble">' + html + '</div>';
+  div.id = 'char-msg-' + (++_msgSeq);
+  container.appendChild(div);
+  scrollCharacterChatBottom();
+  return div.id;
+}
+
+function updateCharacterMessage(id, html) {
+  const div = document.getElementById(id);
+  if (div) {
+    div.querySelector('.bubble').innerHTML = html;
+    scrollCharacterChatBottom();
+  }
 }
 
 // ============================================================

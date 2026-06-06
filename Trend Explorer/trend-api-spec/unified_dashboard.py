@@ -385,6 +385,7 @@ th {{ color: var(--text2); font-weight: 500; font-size: 12px; }}
     <button class="active" data-tab="trend" onclick="switchTab('trend')">📊 趋势大屏</button>
     <button data-tab="review" onclick="switchTab('review')">📝 小说评论</button>
     <button data-tab="chat" onclick="switchTab('chat')">🤖 AI 推荐</button>
+	    <button data-tab="character" onclick="switchTab('character');loadCharacterList()">🎭 角色对话</button>
   </div>
   <div class="toolbar">
     <button onclick="toggleTheme()" title="切换明暗主题">🌓 主题</button>
@@ -443,25 +444,83 @@ th {{ color: var(--text2); font-weight: 500; font-size: 12px; }}
 <div class="tab-content" id="tab-chat">
 <div class="container">
   <div class="chat-container">
-    <div class="avoid-tags" id="avoidTags">
+    <div class="avoid-tags" id="avoidTags" style="display:none;">
       <span style="font-size:12px;color:var(--text2);margin-right:4px;">避雷标签:</span>
     </div>
     <div class="chat-messages" id="chatMessages">
       <div class="chat-msg assistant">
         <div class="avatar">🤖</div>
         <div class="bubble">
-          你好！我是 AI 小说推荐助手。<br>
-          告诉我你想看什么类型的小说，比如：<br>
-          • "推荐克苏鲁风格的悬疑小说"<br>
-          • "有没有类似诡秘之主的完结作品"<br>
-          • "想看轻松搞笑的修仙小说"<br>
-          你还可以选择下方的避雷标签，我会帮你过滤掉不合适的作品。
+          你好！我是小说闲聊助手。<br>
+          我可以帮你做这些事：<br>
+          • 推荐小说 — "推荐悬疑小说"<br>
+          • 查询书的信息 — "诡秘之主好看吗"<br>
+          • 闲聊小说话题 — 和我聊聊你喜欢的角色<br><br>
+          试试看吧！
         </div>
       </div>
     </div>
     <div class="chat-input-area">
-      <input type="text" id="chatInput" placeholder="输入你的阅读偏好..." onkeydown="if(event.key==='Enter')sendMessage()">
+      <input type="text" id="chatInput" placeholder="推荐悬疑小说、诡秘之主好看吗..." onkeydown="if(event.key==='Enter')sendMessage()">
       <button id="sendBtn" onclick="sendMessage()">发送</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ============ Tab 4: 角色对话 ============ -->
+<div class="tab-content" id="tab-character">
+<div class="container">
+  <div class="chat-container">
+    <!-- 角色选择器 -->
+    <div style="padding: 12px 0; border-bottom: 1px solid var(--border); margin-bottom: 8px;">
+      <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;" id="characterSelector">
+        <span style="font-size:13px; color:var(--text2);">选择角色:</span>
+        <div id="characterLoading" class="loading" style="padding:8px"><div class="spinner"></div></div>
+      </div>
+      <div id="charModeBadge" style="margin-top:6px; display:flex; gap:8px; align-items:center;">
+        <span id="charModeLabel" style="font-size:11px; padding:2px 8px; border-radius:4px; background:#f0f0f0; color:#999;">
+          ⏳ 检测中...
+        </span>
+      </div>
+      <div id="characterInfo" style="display:none; margin-top:8px; padding:8px 12px; background:var(--bg); border-radius:8px; border:1px solid var(--border);">
+        <div style="font-size:13px; color:var(--text2);">
+          <span id="charAvatar" style="font-size:24px; margin-right:8px;"></span>
+          <strong id="charName"></strong> · 《<span id="charNovel"></span>》
+          <span id="charPersonality" style="margin-left:8px;"></span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 自定义角色输入 -->
+    <div style="margin-top:8px; padding:8px 0 4px; border-top:1px dashed var(--border);">
+      <div style="font-size:12px; color:var(--text2); margin-bottom:6px;">或者指定任意角色：</div>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+        <input type="text" id="customCharName" placeholder="角色名" style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card-bg);color:var(--text);font-size:13px;width:100px;">
+        <span style="color:var(--text2);font-size:13px;">出自</span>
+        <input type="text" id="customCharNovel" placeholder="小说名" style="padding:5px 10px;border:1px solid var(--border);border-radius:6px;background:var(--card-bg);color:var(--text);font-size:13px;width:130px;">
+        <button onclick="startCustomCharacter()" style="padding:5px 14px;border:1px solid var(--accent);border-radius:6px;background:var(--accent);color:#fff;cursor:pointer;font-size:13px;white-space:nowrap;">开始对话</button>
+        <span id="customCharError" style="font-size:12px;color:var(--rose);display:none;"></span>
+      </div>
+    </div>
+
+    <div class="chat-messages" id="characterChatMessages">
+      <div class="chat-msg assistant">
+        <div class="avatar">🎭</div>
+        <div class="bubble">
+          你好！我是角色扮演助手。<br>
+          请先在顶部选择一个小说角色，然后就可以和他们对话了！<br>
+          · 选择「克莱恩」聊聊诡秘之主的世界<br>
+          · 选择「韩立」探讨修仙之道<br>
+          · 选择「陈歌」体验恐怖屋的日常<br>
+          · 选择「王令」感受仙王的日常<br>
+          · 选择「萧炎」点燃热血斗志
+        </div>
+      </div>
+    </div>
+    <div class="chat-input-area">
+      <input type="text" id="characterChatInput" placeholder="和角色对话..." onkeydown="if(event.key==='Enter')sendCharacterMessage()" disabled>
+      <button id="charSendBtn" onclick="sendCharacterMessage()" disabled>发送</button>
     </div>
   </div>
 </div>
@@ -486,6 +545,7 @@ let currentNovelUid = null;
 let currentNovelTitle = null;
 const CHARTS = {{}};
 const AVOID_TAGS = ['后宫', '烂尾', '虐主', '狗血', '节奏慢'];
+let _msgSeq = 0;
 
 // ============================================================
 // 主题
@@ -781,14 +841,9 @@ function renderTrendDashboard() {{
 // Tab 3: AI 推荐
 // ============================================================
 function initAvoidTags() {{
+  // 避雷标签已移至 RAG 引擎上下文处理
   const container = document.getElementById('avoidTags');
-  AVOID_TAGS.forEach(tag => {{
-    const span = document.createElement('span');
-    span.className = 'avoid-tag';
-    span.textContent = tag;
-    span.onclick = function() {{ this.classList.toggle('selected'); }};
-    container.appendChild(span);
-  }});
+  if (container) container.style.display = 'none';
 }}
 
 function getSelectedAvoidTags() {{
@@ -814,46 +869,26 @@ async function sendMessage() {{
   const avoidTags = getSelectedAvoidTags();
 
   try {{
-    const resp = await fetch(`${{API.search}}/api/v1/search/semantic`, {{
+    const resp = await fetch(`http://127.0.0.1:8003/api/v1/sentiment/chat`, {{
       method: 'POST',
       headers: {{ 'Content-Type': 'application/json' }},
-      body: JSON.stringify({{ query, safe_tags: avoidTags, top_k: 5 }})
+      body: JSON.stringify({{ query, top_k: 5, session_id: 'dashboard-ai-' + Date.now() }})
     }});
     if (!resp.ok) throw new Error('API error: ' + resp.status);
     const result = await resp.json();
 
-    // 更新加载消息为结果
-    const cards = (result.results || []).slice(0, 5);
-    let html = '';
-    if (result.query_rewrite) {{
-      html += `<p style="font-size:13px;color:var(--text2);margin-bottom:8px">🔍 ${{result.query_rewrite}}</p>`;
-    }}
-
-    if (cards.length === 0) {{
-      html += '<p>😕 没有找到匹配的小说，试试换个描述？</p>';
-    }} else {{
-      html += `<p style="margin-bottom:8px">找到 <strong>${{cards.length}}</strong> 本推荐小说：</p><div class="result-cards">`;
-      cards.forEach(card => {{
-        const m = card.metadata || {{}};
-        const safe = card.safe_check || {{}};
-        const passed = safe.passed !== false;
-        const warnings = safe.warnings || [];
-        html += `<div class="result-card" onclick="openReview('${{card.uid}}', '${{m.title}}')" style="${{!passed ? 'opacity:0.6' : ''}}">
-          <div class="title">${{passed ? '✅' : '⚠️'}} ${{m.title || '未知'}}</div>
-          <div class="meta">平台: ${{m.platform || '未知'}} · 相关度: ${{(card.relevance_score || 0).toFixed(2)}}</div>
-          <div class="reason">${{card.match_reason || ''}}</div>
-          ${{warnings.length ? '<div class="warning">⚠️ ' + warnings.join(' · ') + '</div>' : ''}}
-        </div>`;
-      }});
-      html += '</div><p style="font-size:11px;color:var(--text2);margin-top:8px">💡 点击小说卡片查看详细评论分析</p>';
+    // 显示 LLM 生成的回复
+    let html = `<div style="line-height:1.7">${{result.answer.replace(/\\n/g, '<br>')}}</div>`;
+    if (result.sources && result.sources.length > 0) {{
+      html += `<div style="font-size:11px;color:var(--text2);margin-top:8px;padding-top:6px;border-top:1px solid var(--border)">`;
+      html += `📚 参考来源: ${{result.sources.join('、')}}`;
+      html += `</div>`;
     }}
     updateMessage(loadingId, html);
   }} catch (e) {{
-    updateMessage(loadingId, `<p>⚠️ AI 推荐服务不可用 (端口 8002)</p>
-      <p style="font-size:12px;color:var(--text2)">请先启动 Safe-Search 服务：<br>
-      <code>cd "Safe-Search Architect" && uvicorn src.safe_search.api:app --port 8002</code><br>
-      或使用 Mock 模式：<br>
-      <code>uvicorn src.safe_search.mock_server:app --port 8002</code></p>`);
+    updateMessage(loadingId, `<p>⚠️ AI 推荐服务不可用 (端口 8003)</p>
+      <p style="font-size:12px;color:var(--text2)">请先启动 Sentiment Critic 服务：<br>
+      <code>cd "Sentiment Critic" && uvicorn sentiment_critic.sentiment_api:app --port 8003</code></p>`);
   }}
 
   input.disabled = false;
@@ -866,7 +901,7 @@ function appendMessage(role, html) {{
   const div = document.createElement('div');
   div.className = 'chat-msg ' + role;
   div.innerHTML = `<div class="avatar">${{role === 'user' ? '👤' : '🤖'}}</div><div class="bubble">${{html}}</div>`;
-  div.id = 'msg-' + Date.now();
+  div.id = 'msg-' + (++_msgSeq);
   container.appendChild(div);
   scrollChatBottom();
   return div.id;
@@ -883,6 +918,230 @@ function updateMessage(id, html) {{
 function scrollChatBottom() {{
   const container = document.getElementById('chatMessages');
   if (container) container.scrollTop = container.scrollHeight;
+  const charContainer = document.getElementById('characterChatMessages');
+  if (charContainer) charContainer.scrollTop = charContainer.scrollHeight;
+}}
+
+// ============================================================
+// Tab 4: 角色对话
+// ============================================================
+let CURRENT_CHARACTER = null;
+let IS_CUSTOM_CHARACTER = false;
+let CUSTOM_CHARACTER = null;
+
+function scrollCharacterChatBottom() {{
+  const container = document.getElementById('characterChatMessages');
+  if (container) container.scrollTop = container.scrollHeight;
+}}
+
+async function loadCharacterList() {{
+  const container = document.getElementById('characterSelector');
+  const loading = document.getElementById('characterLoading');
+  const info = document.getElementById('characterInfo');
+
+  if (container.querySelectorAll('.char-btn').length > 0) return;
+
+  loading.style.display = 'block';
+  try {{
+    const resp = await fetch(`${{API.sentiment}}/api/v1/sentiment/character/list`);
+    if (!resp.ok) throw new Error('API error');
+    const data = await resp.json();
+    loading.style.display = 'none';
+
+    const chars = data.characters || [];
+    chars.forEach(c => {{
+      const btn = document.createElement('button');
+      btn.className = 'char-btn';
+      btn.innerHTML = `${{c.avatar_emoji || '🎭'}} ${{c.name}}`;
+      btn.dataset.id = c.id;
+      btn.title = `出自《${{c.novel}}》 - ${{(c.personality || []).join('、')}}`;
+      btn.onclick = () => selectCharacter(c.id, chars);
+      container.appendChild(btn);
+    }});
+
+    if (!document.getElementById('charBtnStyle')) {{
+      const style = document.createElement('style');
+      style.id = 'charBtnStyle';
+      style.textContent = `
+        .char-btn {{ padding: 6px 14px; border: 1px solid var(--border); border-radius: 999px;
+          background: var(--card-bg); color: var(--text); cursor: pointer; font-size: 13px;
+          transition: all .2s; }}
+        .char-btn:hover {{ border-color: var(--accent); background: var(--accent-light); }}
+        .char-btn.active {{ border-color: var(--accent); background: var(--accent-light);
+          font-weight: 600; color: var(--accent); }}
+        .char-message-avatar {{ width: 36px; height: 36px; border-radius: 50%; display: flex;
+          align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0;
+          background: var(--bg); }}
+      `;
+      document.head.appendChild(style);
+    }}
+  }} catch (e) {{
+    loading.innerHTML = '<span style="font-size:13px;color:var(--rose);">⚠️ 角色服务不可用 (端口 8003)</span>';
+  }}
+}}
+
+function selectCharacter(id, chars) {{
+  document.querySelectorAll('.char-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector(`.char-btn[data-id="${{id}}"]`)?.classList.add('active');
+
+  // 清除自定义角色模式
+  IS_CUSTOM_CHARACTER = false;
+  CUSTOM_CHARACTER = null;
+
+  const char = chars.find(c => c.id === id);
+  if (!char) return;
+
+  CURRENT_CHARACTER = char;
+  document.getElementById('charAvatar').textContent = char.avatar_emoji || '🎭';
+  document.getElementById('charName').textContent = char.name;
+  document.getElementById('charNovel').textContent = char.novel;
+  document.getElementById('charPersonality').textContent = '『' + (char.personality || []).join('、') + '』';
+  document.getElementById('characterInfo').style.display = 'block';
+
+  document.getElementById('characterChatInput').disabled = false;
+  document.getElementById('charSendBtn').disabled = false;
+  document.getElementById('characterChatInput').placeholder = `对 ${{char.name}} 说点什么...`;
+  document.getElementById('characterChatInput').focus();
+
+  appendCharacterMessage('assistant', `我已经准备好扮演${{char.name}}了！你可以开始和我聊天了。`);
+}}
+
+async function startCustomCharacter() {{
+  const name = document.getElementById('customCharName').value.trim();
+  const novel = document.getElementById('customCharNovel').value.trim();
+  const errorEl = document.getElementById('customCharError');
+
+  if (!name || !novel) {{
+    errorEl.textContent = '请填写角色名和小说名';
+    errorEl.style.display = 'inline';
+    return;
+  }}
+  errorEl.style.display = 'none';
+
+  // 取消选择预定义角色
+  document.querySelectorAll('.char-btn').forEach(b => b.classList.remove('active'));
+
+  IS_CUSTOM_CHARACTER = true;
+  CUSTOM_CHARACTER = {{ name, novel }};
+  CURRENT_CHARACTER = null;
+
+  document.getElementById('charAvatar').textContent = '📖';
+  document.getElementById('charName').textContent = name;
+  document.getElementById('charNovel').textContent = novel;
+  document.getElementById('charPersonality').textContent = '『自定义角色』';
+  document.getElementById('characterInfo').style.display = 'block';
+
+  document.getElementById('characterChatInput').disabled = false;
+  document.getElementById('charSendBtn').disabled = false;
+  document.getElementById('characterChatInput').placeholder = `对 ${{name}} 说点什么...`;
+  document.getElementById('characterChatInput').focus();
+
+  appendCharacterMessage('assistant',
+    `好的，我来扮演《${{novel}}》中的 **${{name}}**！你可以开始和我聊天了。<br>` +
+    `（如果知识库中没有收录这部小说，会返回错误信息）`);
+}}
+
+async function sendCharacterMessage() {{
+  const input = document.getElementById('characterChatInput');
+  const query = input.value.trim();
+  if (!query || (!CURRENT_CHARACTER && !CUSTOM_CHARACTER)) return;
+
+  const btn = document.getElementById('charSendBtn');
+  input.disabled = true;
+  btn.disabled = true;
+
+  appendCharacterMessage('user', query);
+  input.value = '';
+
+  const loadingId = appendCharacterMessage('assistant', '<div class="spinner"></div> 思考中...');
+
+  try {{
+    let url, body;
+    if (IS_CUSTOM_CHARACTER && CUSTOM_CHARACTER) {{
+      url = `${{API.sentiment}}/api/v1/sentiment/character/chat-by-name`;
+      body = JSON.stringify({{
+        query,
+        character_name: CUSTOM_CHARACTER.name,
+        novel_name: CUSTOM_CHARACTER.novel,
+        top_k: 5,
+        session_id: 'dashboard-custom',
+      }});
+    }} else {{
+      url = `${{API.sentiment}}/api/v1/sentiment/character/chat`;
+      body = JSON.stringify({{
+        query,
+        character_id: CURRENT_CHARACTER.id,
+        top_k: 5,
+        session_id: 'dashboard-' + CURRENT_CHARACTER.id,
+      }});
+    }}
+    const resp = await fetch(url, {{
+      method: 'POST',
+      headers: {{ 'Content-Type': 'application/json' }},
+      body
+    }});
+    if (!resp.ok) {{
+      const errData = await resp.json().catch(() => ({{}}));
+      throw new Error(errData.detail || 'API error: ' + resp.status);
+    }}
+    const result = await resp.json();
+    updateCharacterMessage(loadingId, result.answer);
+    // 检测模式并更新状态标签
+    const badge = document.getElementById('charModeLabel');
+    if (badge) {{
+      if (result.method === 'mock' || result.method === 'mock_dynamic') {{
+        badge.textContent = '⚡ Mock 模式 (固定回复，非 AI)';
+        badge.style.background = '#fff3cd';
+        badge.style.color = '#856404';
+      }} else if (result.method && result.method.includes('rag')) {{
+        badge.textContent = '🤖 LLM 模式 (DeepSeek AI 生成)';
+        badge.style.background = '#d4edda';
+        badge.style.color = '#155724';
+      }} else if (result.method && result.method.includes('heuristic')) {{
+        badge.textContent = '⚠️ 降级模式 (LLM 不可用，模板回复)';
+        badge.style.background = '#f8d7da';
+        badge.style.color = '#721c24';
+      }}
+    }}
+  }} catch (e) {{
+    if (IS_CUSTOM_CHARACTER) {{
+      updateCharacterMessage(loadingId,
+        '<p>⚠️ ' + e.message + '</p>' +
+        '<p style="font-size:12px;color:var(--text2)">该小说可能未被知识库收录，请检查小说名是否正确。<br>' +
+        '试试已有的小说：诡秘之主、凡人修仙传、我有一座恐怖屋、修罗武神、仙王的日常生活、斗破苍穹、剑来</p>');
+    }} else {{
+      updateCharacterMessage(loadingId,
+        '<p>⚠️ 角色对话服务暂不可用 (端口 8003)</p>' +
+        '<p style="font-size:12px;color:var(--text2)">请先启动 Sentiment Critic 服务：<br>' +
+        '<code>cd "Sentiment Critic" && uvicorn sentiment_critic.sentiment_api:app --port 8003</code><br>' +
+        '或使用 Mock 模式：<br>' +
+        '<code>uvicorn sentiment_critic.mock_server:app --port 8003</code></p>');
+    }}
+  }}
+
+  input.disabled = false;
+  btn.disabled = false;
+  setTimeout(() => input.focus(), 100);
+}}
+
+function appendCharacterMessage(role, html) {{
+  const container = document.getElementById('characterChatMessages');
+  const div = document.createElement('div');
+  div.className = 'chat-msg ' + role;
+  const avatar = role === 'user' ? '👤' : (IS_CUSTOM_CHARACTER ? '📖' : (CURRENT_CHARACTER?.avatar_emoji || '🎭'));
+  div.innerHTML = '<div class=\"char-message-avatar\">' + avatar + '</div><div class=\"bubble\">' + html + '</div>';
+  div.id = 'char-msg-' + (++_msgSeq);
+  container.appendChild(div);
+  scrollCharacterChatBottom();
+  return div.id;
+}}
+
+function updateCharacterMessage(id, html) {{
+  const div = document.getElementById(id);
+  if (div) {{
+    div.querySelector('.bubble').innerHTML = html;
+    scrollCharacterChatBottom();
+  }}
 }}
 
 // ============================================================

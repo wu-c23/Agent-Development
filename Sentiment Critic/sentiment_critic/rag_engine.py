@@ -1,4 +1,5 @@
 """RAG (Retrieval-Augmented Generation) Engine — 基于外部知识库的智能问答。
+支持角色扮演模式：以小说角色身份与用户对话。
 
 从集中数据源构建文档索引，检索相关上下文，调用 LLM 生成可靠答案。
 
@@ -24,6 +25,9 @@ from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
+
+# 默认禁用 VectorStore（sentence_transformers 加载耗时 30s+，TF-IDF 已足够）
+os.environ.setdefault("DISABLE_VECTOR_STORE", "true")
 
 # jieba 懒加载（词典较大，首次 import 较慢）
 
@@ -84,10 +88,10 @@ def chunk_text(
             ))
             idx += 1
 
-        start = end - overlap
-        if start >= len(text):
+        # 如果已到文本末尾，退出循环
+        if end >= len(text):
             break
-        # 防止无限循环
+        start = end - overlap
         if start <= 0:
             start = end
 
@@ -289,8 +293,33 @@ class VectorStore:
             print(f"[rag] VectorStore unavailable: {_VECTOR_INIT_ERROR}")
             return
 
+        # 嵌入模型加载超时（默认 40 秒，可通过 EMBEDDING_TIMEOUT 环境变量覆盖）
+        embedding_timeout = int(os.environ.get("EMBEDDING_TIMEOUT", "40"))
+
         try:
-            self._init_embedder()
+            # 在独立线程中加载嵌入模型，防止挂死
+            import threading
+            embedder_result = []
+            embedder_error = []
+
+            def _load_embedder():
+                try:
+                    embedder_result.append(self._init_embedder())
+                except Exception as exc:
+                    embedder_error.append(exc)
+
+            t = threading.Thread(target=_load_embedder, daemon=True)
+            t.start()
+            t.join(timeout=embedding_timeout)
+
+            if t.is_alive():
+                print(f"[rag] Embedding model loading timed out after {embedding_timeout}s, "
+                      f"will use TF-IDF only")
+                return
+
+            if embedder_error:
+                raise embedder_error[0]
+
             self._init_chroma(persist_dir)
             self._ready = True
             existing = self._collection.count()
@@ -835,7 +864,43 @@ def _index_mock_data(kb: KnowledgeBase) -> None:
 # ---------------------------------------------------------------------------
 
 
-RAG_SYSTEM_PROMPT = """你是"网络小说智能推荐助手"，基于知识库中的真实数据回答用户问题。
+# ---------------------------------------------------------------------------
+# 角色扮演 Prompt
+# ---------------------------------------------------------------------------
+
+CHARACTER_SYSTEM_PROMPT = """你现在是一个小说角色，请完全代入角色身份来回答用户的问题。
+
+## 角色设定
+角色名：{character_name}
+出自小说：《{novel_title}》
+作者：{author}
+
+## 性格特征
+{personality}
+
+## 说话风格
+{speaking_style}
+
+## 角色背景
+{background}
+
+## 经典台词
+{catchphrases}
+
+## 重要规则
+1. **完全代入角色** — 用角色的语气、口吻、思维方式说话，忘记自己是一个AI助手
+2. **不能出戏** — 不要提及"作为AI"、"根据设定"之类的元话语，你就是在扮演这个角色
+3. **认知边界** — {knowledge_boundary_text}
+4. **自然对话** — 像正常人一样聊天，不要像念百科一样介绍自己的身世。如果用户不问就不必主动说
+5. **态度自然** — 根据角色性格对待用户：如果角色性格冷淡就话少一点，如果性格热情就话多一点
+6. **适度引用** — 可以偶尔使用角色的经典台词，但不要每句话都用
+7. **语言风格** — {speaking_style_hint}
+8. **知识范围** — 只谈论你的世界和你经历的事情。如果用户问到你不知道的事情（比如现代科技、其他小说），诚实地表现出"不知道"或"不理解"，而不是假装知道
+9. **回应长度** — 根据话题自然展开，不要刻意缩短。如果用户问得详细，你就回答得详细（5-10句话）；如果只是打招呼就简短回应（1-2句话）
+10. **不要用markdown格式**，用纯文本自然地说话"""
+
+
+RAG_SYSTEM_PROMPT = """你是"小说闲聊助手"，可以回答关于网络小说的各种问题，包括推荐小说、介绍书籍信息、闲聊等。
 
 重要规则：
 1. 只基于下面提供的【参考资料】来回答，不要编造信息
@@ -844,9 +909,99 @@ RAG_SYSTEM_PROMPT = """你是"网络小说智能推荐助手"，基于知识库�
 4. 如果用户问的是推荐类问题，给出具体书名并简要说明理由
 5. 如果用户问的是某本书的类型/评价/详情，直接回答
 6. 如果用户闲聊（不是找书/问书），认真回答用户的问题
-7. 回答长度：推荐类 4-6 句，询问单本书 3-5 句，闲聊 2-4 句
-8. 用中文回答，不要用 Markdown 格式，所有提到的书名必须用《》包裹
-9. 多轮对话时，注意结合对话历史理解用户的上下文引用（如"第一本"、"这本"、"它"等指代）——用户说的"第一本书"指的是你上一轮推荐的第一本书，不是书名里带"第一"的小说"""
+7. 如果用户问"你能做什么"或类似问题，介绍一下你的功能：推荐小说、介绍书籍详情、查找类似作品、闲聊小说话题等，不要直接推荐书
+8. 回答长度：推荐类 4-6 句，询问单本书 3-5 句，闲聊 2-4 句
+9. 用中文回答，不要用 Markdown 格式，所有提到的书名必须用《》包裹
+10. 多轮对话时，注意结合对话历史理解用户的上下文引用（如"第一本"、"这本"、"它"等指代）——用户说的"第一本书"指的是你上一轮推荐的第一本书，不是书名里带"第一"的小说"""
+
+# ---------------------------------------------------------------------------
+# 动态角色画像构建 — 根据小说信息为任意角色生成 persona
+# ---------------------------------------------------------------------------
+
+_TAG_PERSONALITY_MAP: dict[str, list[str]] = {
+    "玄幻": ["热血", "坚韧"],
+    "修仙": ["隐忍", "坚韧"],
+    "悬疑": ["冷静", "谨慎"],
+    "恐怖": ["胆大", "冷静"],
+    "搞笑": ["幽默", "开朗"],
+    "轻松": ["随和", "开朗"],
+    "克苏鲁": ["谨慎", "探索欲"],
+    "后宫": ["多情", "温柔"],
+    "爽文": ["自信", "果断"],
+    "系统流": ["务实", "机智"],
+    "剑道": ["坚毅", "专注"],
+    "热血": ["激情", "勇敢"],
+    "日常": ["随和", "懒散"],
+    "升级流": ["上进", "隐忍"],
+    "穿越": ["适应力强", "机智"],
+    "重生": ["沉稳", "果断"],
+    "科幻": ["理性", "好奇"],
+    "都市": ["务实", "接地气"],
+}
+
+
+def _build_dynamic_character_profile(
+    character_name: str,
+    novel: dict,
+) -> dict[str, Any]:
+    """根据小说元数据为任意角色动态构建 persona。
+
+    Args:
+        character_name: 用户指定的角色名（不一定存在于知识库中）
+        novel: 小说元数据（来自 data_store.get_novel_by_title）
+
+    Returns:
+        符合 CharacterProfile 风格的 dict，可传递给 character_answer
+    """
+    novel_title = novel.get("title", "")
+    novel_tags = novel.get("tags", [])
+    novel_intro = novel.get("intro", "")
+
+    # 从小说标签推断角色性格
+    personality: list[str] = []
+    for tag in novel_tags:
+        tag_lower = tag.strip().lower()
+        for tag_key, traits in _TAG_PERSONALITY_MAP.items():
+            if tag_key in tag or tag_lower == tag_key.lower():
+                for t in traits:
+                    if t not in personality:
+                        personality.append(t)
+    if not personality:
+        personality = ["普通"]
+
+    # 根据小说类型推断说话风格
+    style_map = {
+        "修仙": "说话沉稳、含蓄，喜欢用修仙界的比喻",
+        "玄幻": "说话豪爽直率，充满斗志",
+        "悬疑": "说话谨慎、神秘，喜欢留悬念",
+        "恐怖": "说话带着一点幽默感来缓解紧张",
+        "搞笑": "说话幽默风趣，喜欢开玩笑",
+        "轻松": "说话随和自然，不急不缓",
+        "科幻": "说话理性，喜欢分析",
+        "都市": "说话接地气，现代化",
+    }
+    speaking_style = "自然说话"
+    for tag in novel_tags:
+        for style_key, style_val in style_map.items():
+            if style_key in tag:
+                speaking_style = style_val
+                break
+
+    background = f"{character_name}是《{novel_title}》中的角色。{novel_intro[:300]}"
+
+    return {
+        "id": f"dynamic_{character_name}_{novel_title}",
+        "name": character_name,
+        "novel": novel_title,
+        "author": novel.get("author", "未知作者"),
+        "personality": personality,
+        "speaking_style": speaking_style,
+        "background": background,
+        "catchphrases": [],
+        "knowledge_boundary": "in-universe",
+        "avatar_emoji": "📖",
+    }
+
 
 # ---------------------------------------------------------------------------
 # 会话管理 — 多轮对话记忆
@@ -969,6 +1124,338 @@ class RAGEngine:
             return "hybrid"
         return "tfidf"
 
+    def character_answer(
+        self,
+        query: str,
+        character: dict[str, Any],
+        top_k: int = 5,
+        session_id: str = "",
+    ) -> dict[str, Any]:
+        """以小说角色身份回答用户问题。
+
+        Args:
+            query: 用户输入
+            character: 角色画像数据 (来自 CharacterProfile.to_dict())
+            top_k: 检索数量
+            session_id: 会话ID，用于多轮对话
+
+        Returns:
+            {"answer": str, "sources": [...], "method": "character_rag"|"character_heuristic"}
+        """
+        from .data_store import get_novel_by_title
+
+        character_name = character.get("name", "未知角色")
+        novel_title = character.get("novel", "")
+        novel = get_novel_by_title(novel_title)
+
+        # 构建角色系统提示词
+        char_prompt = self._build_character_prompt(character)
+
+        # 多轮对话：解析指代表达式
+        session = get_or_create_session(session_id) if session_id else None
+        enriched_query = query
+        if session and session.last_recommended_titles:
+            enriched_query, _ = _resolve_references(query, session.last_recommended_titles)
+
+        # 检索知识库（优先检索角色所属小说的知识）
+        retrieved = self._retrieve(enriched_query, top_k)
+        if not retrieved and novel:
+            # 用小说名作为补充检索
+            retrieved = self._retrieve(enriched_query + " " + novel_title, top_k)
+
+        if retrieved:
+            seen = set()
+            unique_chunks = []
+            for chunk, score in retrieved:
+                key = chunk.text[:100]
+                if key not in seen:
+                    seen.add(key)
+                    unique_chunks.append((chunk, score))
+            retrieved = unique_chunks[:top_k]
+
+            context_parts = []
+            sources = []
+            for i, (chunk, score) in enumerate(retrieved, 1):
+                context_parts.append(f"[资料{i}] (来源:{chunk.source_title}, 相关度:{score:.2f})\n{chunk.text}")
+                if chunk.source_title and chunk.source_title not in sources:
+                    sources.append(chunk.source_title)
+        else:
+            context_parts = []
+            sources = []
+
+        context = "\n\n---\n\n".join(context_parts) if context_parts else ""
+
+        # 注入所属小说的元数据作为背景知识
+        novel_context = ""
+        if novel:
+            novel_context = f"你出自小说《{novel_title}》，{novel.get('intro', '')[:200]}"
+
+        full_context = ""
+        if novel_context:
+            full_context += novel_context + "\n\n"
+        if context:
+            full_context += "以下是与当前对话可能相关的参考信息（仅供你参考，不要直接照念）：\n" + context
+
+        if self.use_agent:
+            try:
+                answer = self._generate_character_llm(query, full_context, char_prompt, session)
+                if session:
+                    session.messages.append({"role": "user", "content": query})
+                    session.messages.append({"role": "assistant", "content": answer})
+                    session.last_recommended_titles = _extract_titles_from_answer(answer)
+                    _strip_session(session)
+                return {"answer": answer, "sources": sources[:5], "method": "character_rag"}
+            except Exception as exc:
+                import traceback
+                print(f"[rag] Character LLM generation failed: {exc}", file=sys.stderr, flush=True)
+                traceback.print_exc(file=sys.stderr)
+
+        answer = self._generate_character_heuristic(query, character, novel)
+        if session:
+            session.messages.append({"role": "user", "content": query})
+            session.messages.append({"role": "assistant", "content": answer})
+            session.last_recommended_titles = _extract_titles_from_answer(answer)
+            _strip_session(session)
+        return {"answer": answer, "sources": sources[:5], "method": "character_heuristic"}
+
+    def _build_character_prompt(self, character: dict[str, Any]) -> str:
+        """构建角色扮演的系统提示词。"""
+        personality_list = character.get("personality", [])
+        catchphrases_list = character.get("catchphrases", [])
+        speaking_style = character.get("speaking_style", "自然说话")
+        knowledge_boundary = character.get("knowledge_boundary", "in-universe")
+
+        if knowledge_boundary == "in-universe":
+            kbt = "你只知道你所处的世界和时代发生的事，对现实世界、现代科技、其他小说一概不知。有人问起超出你认知范围的事，表现出困惑或好奇。"
+            sh = f"严格按照{character.get('name', '')}的说话方式。" + (f"重点：{speaking_style[:200]}" if speaking_style else "")
+        else:
+            kbt = "你知道自己是一部小说中的角色，但不要主动提及。可以适当跳出角色进行评论，但主要还是以角色身份对话。"
+            sh = (f"参考其说话方式：{speaking_style[:200]}" if speaking_style else "自然说话")
+
+        return (
+            CHARACTER_SYSTEM_PROMPT
+            .replace("{character_name}", character.get("name", "未知角色"))
+            .replace("{novel_title}", character.get("novel", "未知小说"))
+            .replace("{author}", character.get("author", "未知作者"))
+            .replace("{personality}", "、".join(personality_list) if personality_list else "普通")
+            .replace("{speaking_style}", speaking_style or "自然")
+            .replace("{background}", character.get("background", "")[:500])
+            .replace("{catchphrases}", "；".join(catchphrases_list[:3]) if catchphrases_list else "无")
+            .replace("{knowledge_boundary_text}", kbt)
+            .replace("{speaking_style_hint}", sh)
+        )
+
+    def _generate_character_llm(
+        self,
+        query: str,
+        context: str,
+        character_prompt: str,
+        session: ConversationState | None = None,
+    ) -> str:
+        """使用 LLM 生成角色扮演回复。"""
+        from .agent_client import AgentClient
+
+        client = AgentClient()
+        if not client.available:
+            raise RuntimeError("LLM not available")
+
+        user_prompt = query
+        if context:
+            user_prompt = f"""[上下文参考信息]
+{context}
+
+[用户对你说]
+{query}
+
+请以角色身份自然回应以上内容。"""
+
+        history: list[dict[str, str]] = []
+        if session and len(session.messages) >= 2:
+            history = session.messages.copy()
+
+        return self._call_llm_text(character_prompt, user_prompt, history)
+
+    def _generate_character_heuristic(
+        self,
+        query: str,
+        character: dict[str, Any],
+        novel: dict[str, Any] | None,
+    ) -> str:
+        """无 LLM 时的启发式角色回复。"""
+        name = character.get("name", "我")
+        catchphrases = character.get("catchphrases", [])
+        speaking_style = character.get("speaking_style", "")
+        personality = character.get("personality", [])
+        is_taciturn = any(t in ["沉默寡言", "话不多", "惜字如金", "懒散"] for t in personality) or "话极少" in speaking_style
+
+        query_lower = query.lower()
+
+        # 提取小说简介作为素材
+        bg = character.get("background", "")[:300]
+
+        # 打招呼检测
+        greetings = ["你好", "嗨", "hi", "hello", "在吗", "hey", "哈罗"]
+        if any(g in query_lower for g in greetings):
+            if is_taciturn:
+                return f"（点点头）嗯。"
+            cp = catchphrases[0] if catchphrases else ""
+            novel_name = character.get('novel', '')
+            if novel_name:
+                base = f"你好，我是{name}，来自《{novel_name}》。"
+            else:
+                base = f"你好，我是{name}。"
+            return cp + "\n" + base if cp else base
+
+        # 询问角色信息
+        about_self = ["你是谁", "你叫什么", "介绍", "你的故事", "你是什么人", "说说你"]
+        if any(w in query_lower for w in about_self):
+            novel_name = character.get('novel', '')
+            author = character.get('author', '')
+            if bg:
+                reply = f"我是{name}"
+                if novel_name:
+                    reply += f"，《{novel_name}》中的角色"
+                if author:
+                    reply += f"，作者{author}"
+                reply += f"。{bg}"
+                return reply
+            return f"我是{name}，来自《{novel_name}》。" if novel_name else f"我是{name}。"
+
+        # 询问小说
+        about_novel = ["什么小说", "哪本书", "出自"]
+        if any(w in query_lower for w in about_novel):
+            novel_name = character.get('novel', '')
+            if not novel_name:
+                return f"我是{name}。"
+            author = character.get('author', '')
+            reply = f"我出自《{novel_name}》"
+            if author:
+                reply += f"，作者{author}"
+            reply += "。"
+            if bg:
+                reply += " " + bg[:200]
+            return reply
+
+        # 检索知识库内容（如果有 novel），丰富回复素材
+        extra_context = ""
+        if novel and self.kb and self.kb.total_chunks > 0:
+            try:
+                novel_chunks = self.kb.retrieve(f"{character.get('novel', '')} {query}", top_k=2)
+                if novel_chunks:
+                    extra_texts = [c[0].text[:200] for c in novel_chunks if c[0].source_title == character.get('novel', '')]
+                    if extra_texts:
+                        extra_context = "".join(extra_texts)[:300]
+            except Exception:
+                pass
+
+        if is_taciturn:
+            if extra_context:
+                return f"（{name}沉默片刻）……{extra_context[:150]}"
+            return f"……（{name}看了你一眼，没有多说什么）"
+
+        if extra_context:
+            cp = catchphrases[0] + "\n" if catchphrases else ""
+            return f"{cp}（{name}思索片刻）{extra_context[:300]}"
+
+        cp = catchphrases[0] + "\n" if catchphrases else ""
+        return f"{cp}（{name}思考了一下）嗯，关于这个嘛……你说的是《{character.get('novel', '')}》的事情吧。{bg[:200]}"
+
+    def dynamic_character_answer(
+        self,
+        query: str,
+        character_name: str,
+        novel_name: str,
+        top_k: int = 5,
+        session_id: str = "",
+    ) -> dict[str, Any]:
+        """以任意指定的小说角色身份回答用户问题。
+
+        不同于 character_answer（需要预定义的 character_id），此方法接受
+        任意的角色名和小说名。如果小说存在于知识库中，会自动构建角色 persona
+        并检索相关知识生成回复；如果小说未收录，返回错误信息。
+
+        Returns:
+            {"answer": str, "sources": [...], "method": str}
+            或在 novel 未找到时返回 {"error": "...", "code": "novel_not_found"}
+        """
+        from .data_store import get_novel_by_title
+
+        # 查找小说
+        novel = get_novel_by_title(novel_name)
+        if novel is None:
+            return {
+                "error": f"知识库中暂未收录《{novel_name}》，无法创建「{character_name}」的角色扮演。",
+                "code": "novel_not_found",
+            }
+
+        # 动态构建角色画像
+        character = _build_dynamic_character_profile(character_name, novel)
+
+        # 构建角色系统提示词
+        char_prompt = self._build_character_prompt(character)
+
+        # 多轮对话：解析指代表达式
+        session = get_or_create_session(session_id) if session_id else None
+
+        # 检索知识库（重点检索该小说的相关内容）
+        enriched_query = f"{query} {novel_name} {character_name}"
+        retrieved = self._retrieve(enriched_query, top_k)
+        if not retrieved:
+            retrieved = self._retrieve(novel_name, top_k)
+
+        if retrieved:
+            seen = set()
+            unique_chunks = []
+            for chunk, score in retrieved:
+                key = chunk.text[:100]
+                if key not in seen:
+                    seen.add(key)
+                    unique_chunks.append((chunk, score))
+            retrieved = unique_chunks[:top_k]
+
+            context_parts = []
+            sources = []
+            for i, (chunk, score) in enumerate(retrieved, 1):
+                context_parts.append(f"[资料{i}] (来源:{chunk.source_title}, 相关度:{score:.2f})\n{chunk.text}")
+                if chunk.source_title and chunk.source_title not in sources:
+                    sources.append(chunk.source_title)
+        else:
+            context_parts = []
+            sources = []
+
+        context = "\n\n---\n\n".join(context_parts) if context_parts else ""
+
+        # 注入小说元数据作为背景知识
+        novel_context = (
+            f"你出自小说《{novel_name}》，作者{novel.get('author', '未知')}。\n"
+            f"小说简介：{novel.get('intro', '')[:300]}\n"
+            f"标签：{', '.join(novel.get('tags', []))}"
+        )
+
+        full_context = novel_context
+        if context:
+            full_context += "\n\n以下是与当前对话相关的参考信息：\n" + context
+
+        if self.use_agent:
+            try:
+                answer = self._generate_character_llm(query, full_context, char_prompt, session)
+                if session:
+                    session.messages.append({"role": "user", "content": query})
+                    session.messages.append({"role": "assistant", "content": answer})
+                    _strip_session(session)
+                return {"answer": answer, "sources": sources[:5], "method": "character_rag"}
+            except Exception as exc:
+                import traceback
+                print(f"[rag] Dynamic character LLM generation failed: {exc}", file=sys.stderr, flush=True)
+                traceback.print_exc(file=sys.stderr)
+
+        answer = self._generate_character_heuristic(query, character, novel)
+        if session:
+            session.messages.append({"role": "user", "content": query})
+            session.messages.append({"role": "assistant", "content": answer})
+            _strip_session(session)
+        return {"answer": answer, "sources": sources[:5], "method": "character_heuristic"}
+
     def answer(self, query: str, top_k: int = 5, session_id: str = "") -> dict[str, Any]:
         """根据用户查询，检索知识库并生成答案。
 
@@ -1025,7 +1512,9 @@ class RAGEngine:
                     _strip_session(session)
                 return {"answer": answer, "sources": sources[:5], "method": method}
             except Exception as exc:
-                print(f"[rag] LLM generation failed: {exc}, falling back to heuristic")
+                import traceback
+                print(f"[rag] LLM generation failed: {exc}", file=sys.stderr, flush=True)
+                traceback.print_exc(file=sys.stderr)
 
         answer = self._generate_heuristic(query, retrieved)
         if session:
@@ -1150,6 +1639,17 @@ class RAGEngine:
         is_recommend = any(w in query_lower for w in ["推荐", "找", "有没有", "书荒", "想看"])
         is_inquiry = any(w in query_lower for w in ["是什么", "好看吗", "怎么样", "评价", "完结", "类型", "讲讲", "讲一讲", "具体", "内容", "介绍", "聊一聊", "说说"])
         is_followup = any(w in query_lower for w in ["第一", "第二", "第三", "这本", "那本", "上一本", "刚才", "前面"])
+        is_capability = any(w in query_lower for w in ["你能做什么", "你能干嘛", "你会什么", "你有哪些功能", "能做什么", "你会做什么", "what can you do", "功能", "help"])
+
+        if is_capability:
+            return (
+                f"你好！我是小说闲聊助手，可以帮你做这些事情：\n\n"
+                f"📖 **推荐小说** — 告诉我你喜欢什么类型，比如「推荐悬疑小说」「有没有类似凡人修仙传的书」\n"
+                f"🔍 **查询小说信息** — 问某本书的评价、类型、是否完结，比如「诡秘之主好看吗」「斗破苍穹怎么样」\n"
+                f"💬 **闲聊小说话题** — 和我聊聊你喜欢的角色和剧情\n"
+                f"🎭 **角色对话** — 切换到角色对话Tab，和小说角色直接聊天\n\n"
+                f"想试试哪个功能？"
+            )
 
         if (is_inquiry or is_followup) and books:
             top_book = books[0]
@@ -1182,6 +1682,7 @@ class RAGEngine:
 _global_kb: KnowledgeBase | None = None
 _global_vs: VectorStore | None = None
 _global_engine: RAGEngine | None = None
+_vector_store_attempted: bool = False  # True if init already attempted (success or timeout)
 
 
 def get_knowledge_base(reload: bool = False) -> KnowledgeBase:
@@ -1193,12 +1694,49 @@ def get_knowledge_base(reload: bool = False) -> KnowledgeBase:
 
 
 def get_vector_store(reload: bool = False) -> VectorStore | None:
-    """获取全局向量存储单例（可能为 None，表示 embedding 不可用）。"""
-    global _global_vs, _global_kb
-    if _global_vs is None or reload:
-        kb = get_knowledge_base(reload)
-        _global_vs = build_vector_store_from_kb(kb)
-    return _global_vs if (_global_vs and _global_vs.ready) else None
+    """获取全局向量存储单例（可能为 None，表示 embedding 不可用）。
+
+    首次初始化在后台上运行，超时或失败后标记为已尝试，后续不再重试。
+    设置环境变量 DISABLE_VECTOR_STORE=true 可完全跳过。
+    """
+    global _global_vs, _global_kb, _vector_store_attempted
+
+    if os.environ.get("DISABLE_VECTOR_STORE", "").lower() in ("true", "1", "yes"):
+        return None
+
+    if reload:
+        _global_vs = None
+        _vector_store_attempted = False
+
+    if _global_vs is not None or _vector_store_attempted:
+        return _global_vs if (_global_vs is not None and _global_vs._ready) else None
+
+    # 首次初始化：后台线程 + 超时
+    _vector_store_attempted = True
+    kb = get_knowledge_base(reload)
+
+    import threading
+    vs_container = []
+
+    def _build_vs():
+        vs_container.append(build_vector_store_from_kb(kb))
+
+    t = threading.Thread(target=_build_vs, daemon=True)
+    t.start()
+    timeout = int(os.environ.get("VECTOR_STORE_TIMEOUT", "30"))
+    t.join(timeout=timeout)
+
+    if t.is_alive():
+        print(f"[rag] VectorStore init timed out after {timeout}s, using TF-IDF only", file=sys.stderr, flush=True)
+        _global_vs = None
+    else:
+        _global_vs = vs_container[0] if vs_container else None
+        if _global_vs and _global_vs._ready:
+            print(f"[rag] VectorStore ready (background init)", flush=True)
+        else:
+            print(f"[rag] VectorStore init completed but not ready, using TF-IDF", file=sys.stderr, flush=True)
+
+    return _global_vs if (_global_vs is not None and _global_vs._ready) else None
 
 
 def get_rag_engine(reload: bool = False) -> RAGEngine:

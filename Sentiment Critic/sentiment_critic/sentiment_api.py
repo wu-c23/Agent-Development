@@ -13,6 +13,7 @@ Endpoints:
 from __future__ import annotations
 
 import random
+import sys
 import time
 from typing import Optional
 
@@ -21,6 +22,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .data_store import build_mock_sentiment_store, reload as reload_data_store
+from .data_store import get_all_characters, get_character, get_novel_by_title
 from .rag_engine import get_rag_engine
 from pydantic import BaseModel, Field
 
@@ -151,6 +153,115 @@ async def kb_stats():
     return stats
 
 
+# ---------------------------------------------------------------------------
+# 角色对话端点
+# ---------------------------------------------------------------------------
+
+
+class CharacterChatRequest(BaseModel):
+    query: str = Field(..., min_length=1, max_length=500, description="用户对角色说的话")
+    character_id: str = Field(..., min_length=1, description="角色ID，如 'klein'、'hanli'")
+    top_k: int = Field(default=5, ge=1, le=10, description="检索数量")
+    session_id: str = Field(default="", max_length=128, description="会话ID，用于多轮对话上下文关联")
+
+
+@app.get("/api/v1/sentiment/character/list")
+async def character_list():
+    """获取所有可用的角色扮演角色列表。"""
+    characters = get_all_characters()
+    return {
+        "characters": [
+            {
+                "id": c["id"],
+                "name": c["name"],
+                "novel": c["novel"],
+                "personality": c.get("personality", []),
+                "avatar_emoji": c.get("avatar_emoji", "🎭"),
+                "catchphrases": c.get("catchphrases", [])[:2],
+            }
+            for c in characters
+        ],
+        "total": len(characters),
+    }
+
+
+@app.post("/api/v1/sentiment/character/chat")
+async def character_chat(request: CharacterChatRequest):
+    """以小说角色身份与用户对话。
+
+    选择一部小说中的角色，AI 会以该角色的身份和口吻与用户自然对话。
+    示例角色ID: 'klein'（克莱恩·莫雷蒂）、'hanli'（韩立）、'chenge'（陈歌）
+    """
+    character = get_character(request.character_id)
+    if character is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"角色 '{request.character_id}' 不存在。GET /api/v1/sentiment/character/list 查看可用角色。",
+        )
+
+    engine = get_rag_engine()
+    result = engine.character_answer(
+        query=request.query,
+        character=character,
+        top_k=request.top_k,
+        session_id=request.session_id,
+    )
+    return {
+        "query": request.query,
+        "answer": result["answer"],
+        "character": {
+            "id": character["id"],
+            "name": character["name"],
+            "novel": character["novel"],
+            "avatar_emoji": character.get("avatar_emoji", "🎭"),
+        },
+        "sources": result["sources"],
+        "method": result["method"],
+    }
+
+
+class CharacterChatByNameRequest(BaseModel):
+    query: str = Field(..., min_length=1, max_length=500, description="用户问题")
+    character_name: str = Field(..., min_length=1, max_length=100, description="角色名，如 '叶凡'、'唐三'")
+    novel_name: str = Field(..., min_length=1, max_length=100, description="小说名，如 '遮天'、'斗罗大陆'")
+    top_k: int = Field(default=5, ge=1, le=10, description="检索数量")
+    session_id: str = Field(default="", max_length=128, description="会话ID")
+
+
+@app.post("/api/v1/sentiment/character/chat-by-name")
+async def character_chat_by_name(request: CharacterChatByNameRequest):
+    """以任意指定的小说角色身份对话（无需预定义角色 ID）。
+
+    客户端只需提供角色名和小说名，系统会在知识库中查找该小说的信息，
+    自动构建角色 persona 并生成回复。
+
+    如果小说未收录，返回 404 错误。
+    """
+    engine = get_rag_engine()
+    result = engine.dynamic_character_answer(
+        query=request.query,
+        character_name=request.character_name,
+        novel_name=request.novel_name,
+        top_k=request.top_k,
+        session_id=request.session_id,
+    )
+
+    if "error" in result:
+        raise HTTPException(status_code=404, detail=result["error"])
+
+    return {
+        "query": request.query,
+        "answer": result["answer"],
+        "character": {
+            "name": request.character_name,
+            "novel": request.novel_name,
+            "avatar_emoji": "📖",
+        },
+        "sources": result.get("sources", []),
+        "method": result.get("method", "dynamic_character"),
+    }
+
+
 @app.get("/api/v1/sentiment/detail/{uid}")
 async def sentiment_detail(uid: str):
     """获取单书舆情详情 — 符合 Data Contract SentimentData Schema。
@@ -183,3 +294,51 @@ async def sentiment_raw(uid: str):
     if data is None:
         raise HTTPException(status_code=404, detail=f"Sentiment data not found for UID: {uid}")
     return data
+
+
+# ---------------------------------------------------------------------------
+# Startup diagnostic
+# ---------------------------------------------------------------------------
+
+try:
+    from .agent_client import AgentClientConfig
+    cfg = AgentClientConfig.from_env()
+    for line in cfg.diagnostic_lines():
+        print(f"[sentiment_api] {line}", file=sys.stderr, flush=True)
+    if cfg.validation_errors():
+        print(f"[sentiment_api] LLM unavailable: {cfg.validation_errors()}", file=sys.stderr, flush=True)
+        print(f"[sentiment_api] 角色对话将使用启发式规则回复（无 LLM 生成）", file=sys.stderr, flush=True)
+        print(f"[sentiment_api] 如需 LLM 支持，请在 Safe-Search Architect/.env 中配置 DEEPSEEK_API_KEY", file=sys.stderr, flush=True)
+    else:
+        print(f"[sentiment_api] LLM 已就绪 — 角色对话将使用 DeepSeek 生成回复", file=sys.stderr, flush=True)
+except Exception as e:
+    print(f"[sentiment_api] Config diagnostic skipped: {e}", file=sys.stderr, flush=True)
+
+
+# ---------------------------------------------------------------------------
+# RAG engine warm-up (background, avoids 20s+ delay on first request)
+# ---------------------------------------------------------------------------
+
+import threading
+
+
+@app.on_event("startup")
+async def warm_up_rag_engine():
+    """在后台预初始化 RAG 引擎，避免首请求阻塞。"""
+    import asyncio
+
+    def _warm():
+        import time
+        t0 = time.time()
+        try:
+            from .rag_engine import get_rag_engine
+            engine = get_rag_engine()
+            elapsed = time.time() - t0
+            print(f"[sentiment_api] RAG engine warmed up in {elapsed:.0f}s "
+                  f"(method={engine.retrieval_method}, agent={engine.use_agent})",
+                  file=sys.stderr, flush=True)
+        except Exception as exc:
+            print(f"[sentiment_api] RAG engine warm-up failed: {exc}", file=sys.stderr, flush=True)
+
+    loop = asyncio.get_event_loop()
+    loop.run_in_executor(None, _warm)
