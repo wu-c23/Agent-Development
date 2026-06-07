@@ -1,0 +1,39 @@
+# ============================================================
+# Trend Explorer (吴隐) — 全网风向标 统一依赖
+# ============================================================
+# 安装: pip install -r requirements.txt
+#
+# 包含三个子模块:
+#   trend-api-spec/          FastAPI 趋势 API (端口 8001)
+#   crawler-engine-v1.0/     Scrapy + Playwright 数据采集
+#   trend-analysis-prompt-v1.2/  LangChain LLM 趋势分析 (可选)
+
+# ----------------------------------------------------------
+# API 服务 (trend-api-spec)
+# ----------------------------------------------------------
+fastapi>=0.109.0
+uvicorn[standard]>=0.27.0
+pydantic>=2.0
+
+# ----------------------------------------------------------
+# 数据采集 (crawler-engine-v1.0)
+# ----------------------------------------------------------
+scrapy>=2.11
+Twisted==23.10.0
+playwright>=1.40
+scrapy-redis>=0.9
+itemadapter>=0.9
+python-dotenv>=1.0
+
+# ----------------------------------------------------------
+# LLM 趋势分析 (trend-analysis-prompt-v1.2) — 可选
+# ----------------------------------------------------------
+# 启用 LLM 分析时需要:
+# langchain-core>=0.3
+# langchain-openai>=0.2
+#
+# 使用统一 DeepSeek API (在 Safe-Search Architect/.env 中配置):
+#   DEEPSEEK_API_KEY=你的key
+#   DEEPSEEK_BASE_URL=https://api.deepseek.com
+#   DEEPSEEK_CHAT_MODEL=deepseek-v4-pro
+#   NOVEL_TREND_LLM_TEMPERATURE=0.2        (可选)

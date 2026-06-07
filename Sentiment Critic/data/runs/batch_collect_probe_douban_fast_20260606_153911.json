@@ -1,0 +1,215 @@
+{
+  "started_at": "2026-06-06T15:39:11+08:00",
+  "source": "C:\\Users\\wenjie-wu\\Desktop\\Homework\\大三下\\智能体\\Agent-Development\\Sentiment Critic\\data\\novels.json",
+  "candidate_count": 20,
+  "requested_platforms": [
+    "douban"
+  ],
+  "items": [
+    {
+      "index": 1,
+      "title": "无敌天命",
+      "platform": "douban",
+      "heat_score": 2488206.0,
+      "status": "empty",
+      "started_at": "2026-06-06T15:39:11+08:00",
+      "review_count": 0,
+      "finished_at": "2026-06-06T15:39:20+08:00"
+    },
+    {
+      "index": 2,
+      "title": "逆天邪神",
+      "platform": "douban",
+      "heat_score": 857489.0,
+      "status": "skipped_existing",
+      "started_at": "2026-06-06T15:39:20+08:00",
+      "finished_at": "2026-06-06T15:39:20+08:00"
+    },
+    {
+      "index": 3,
+      "title": "太荒吞天诀",
+      "platform": "douban",
+      "heat_score": 693944.0,
+      "status": "empty",
+      "started_at": "2026-06-06T15:39:20+08:00",
+      "review_count": 0,
+      "finished_at": "2026-06-06T15:39:26+08:00"
+    },
+    {
+      "index": 4,
+      "title": "剑来",
+      "platform": "douban",
+      "heat_score": 495908.0,
+      "status": "skipped_existing",
+      "started_at": "2026-06-06T15:39:26+08:00",
+      "finished_at": "2026-06-06T15:39:26+08:00"
+    },
+    {
+      "index": 5,
+      "title": "星辰大道",
+      "platform": "douban",
+      "heat_score": 472347.0,
+      "status": "empty",
+      "started_at": "2026-06-06T15:39:26+08:00",
+      "review_count": 0,
+      "finished_at": "2026-06-06T15:39:31+08:00"
+    },
+    {
+      "index": 6,
+      "title": "最强狂兵Ⅱ：黑暗荣耀",
+      "platform": "douban",
+      "heat_score": 380830.0,
+      "status": "empty",
+      "started_at": "2026-06-06T15:39:31+08:00",
+      "review_count": 0,
+      "finished_at": "2026-06-06T15:39:38+08:00"
+    },
+    {
+      "index": 7,
+      "title": "逍遥四公子",
+      "platform": "douban",
+      "heat_score": 228053.0,
+      "status": "empty",
+      "started_at": "2026-06-06T15:39:38+08:00",
+      "review_count": 0,
+      "finished_at": "2026-06-06T15:39:41+08:00"
+    },
+    {
+      "index": 8,
+      "title": "万仙来朝",
+      "platform": "douban",
+      "heat_score": 213366.0,
+      "status": "empty",
+      "started_at": "2026-06-06T15:39:41+08:00",
+      "review_count": 0,
+      "finished_at": "2026-06-06T15:39:43+08:00"
+    },
+    {
+      "index": 9,
+      "title": "齐天",
+      "platform": "douban",
+      "heat_score": 203565.0,
+      "status": "empty",
+      "started_at": "2026-06-06T15:39:43+08:00",
+      "review_count": 0,
+      "finished_at": "2026-06-06T15:39:51+08:00"
+    },
+    {
+      "index": 10,
+      "title": "从军赋",
+      "platform": "douban",
+      "heat_score": 194055.0,
+      "status": "empty",
+      "started_at": "2026-06-06T15:39:51+08:00",
+      "review_count": 0,
+      "finished_at": "2026-06-06T15:40:00+08:00"
+    },
+    {
+      "index": 11,
+      "title": "众仙俯首",
+      "platform": "douban",
+      "heat_score": 193168.0,
+      "status": "empty",
+      "started_at": "2026-06-06T15:40:00+08:00",
+      "review_count": 0,
+      "finished_at": "2026-06-06T15:40:07+08:00"
+    },
+    {
+      "index": 12,
+      "title": "舔狗反派只想苟，女主不按套路走！",
+      "platform": "douban",
+      "heat_score": 167388.0,
+      "status": "empty",
+      "started_at": "2026-06-06T15:40:07+08:00",
+      "review_count": 0,
+      "finished_at": "2026-06-06T15:40:09+08:00"
+    },
+    {
+      "index": 13,
+      "title": "封疆悍卒",
+      "platform": "douban",
+      "heat_score": 145305.0,
+      "status": "empty",
+      "started_at": "2026-06-06T15:40:09+08:00",
+      "review_count": 0,
+      "finished_at": "2026-06-06T15:40:16+08:00"
+    },
+    {
+      "index": 14,
+      "title": "边关猎户，我粮肉满仓富甲一方",
+      "platform": "douban",
+      "heat_score": 122158.0,
+      "status": "empty",
+      "started_at": "2026-06-06T15:40:16+08:00",
+      "review_count": 0,
+      "finished_at": "2026-06-06T15:40:22+08:00"
+    },
+    {
+      "index": 15,
+      "title": "鸿蒙霸体诀",
+      "platform": "douban",
+      "heat_score": 119672.0,
+      "status": "empty",
+      "started_at": "2026-06-06T15:40:22+08:00",
+      "review_count": 0,
+      "finished_at": "2026-06-06T15:40:28+08:00"
+    },
+    {
+      "index": 16,
+      "title": "葬神棺",
+      "platform": "douban",
+      "heat_score": 115436.0,
+      "status": "empty",
+      "started_at": "2026-06-06T15:40:28+08:00",
+      "review_count": 0,
+      "finished_at": "2026-06-06T15:40:32+08:00"
+    },
+    {
+      "index": 17,
+      "title": "天黑请点灯",
+      "platform": "douban",
+      "heat_score": 111443.0,
+      "status": "empty",
+      "started_at": "2026-06-06T15:40:32+08:00",
+      "review_count": 0,
+      "finished_at": "2026-06-06T15:40:37+08:00"
+    },
+    {
+      "index": 18,
+      "title": "屠狗之辈",
+      "platform": "douban",
+      "heat_score": 86739.0,
+      "status": "empty",
+      "started_at": "2026-06-06T15:40:37+08:00",
+      "review_count": 0,
+      "finished_at": "2026-06-06T15:40:42+08:00"
+    },
+    {
+      "index": 19,
+      "title": "天道天骄",
+      "platform": "douban",
+      "heat_score": 81934.0,
+      "status": "empty",
+      "started_at": "2026-06-06T15:40:42+08:00",
+      "review_count": 0,
+      "finished_at": "2026-06-06T15:40:50+08:00"
+    },
+    {
+      "index": 20,
+      "title": "有帝族背景还开挂，我无敌了！",
+      "platform": "douban",
+      "heat_score": 76323.0,
+      "status": "empty",
+      "started_at": "2026-06-06T15:40:50+08:00",
+      "review_count": 0,
+      "finished_at": "2026-06-06T15:40:56+08:00"
+    }
+  ],
+  "finished_at": "2026-06-06T15:40:56+08:00",
+  "summary": {
+    "collected_pairs": 0,
+    "skipped_or_empty_pairs": 20,
+    "error_pairs": 0,
+    "total_reviews": 0
+  }
+}

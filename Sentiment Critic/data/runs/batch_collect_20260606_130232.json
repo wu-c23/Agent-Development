@@ -1,0 +1,28 @@
+{
+  "started_at": "2026-06-06T13:02:32+08:00",
+  "source": "C:\\Users\\wenjie-wu\\Desktop\\Homework\\大三下\\智能体\\Agent-Development\\Sentiment Critic\\data\\novels.json",
+  "candidate_count": 1,
+  "requested_platforms": [
+    "tieba"
+  ],
+  "items": [
+    {
+      "index": 1,
+      "title": "无敌天命",
+      "platform": "tieba",
+      "heat_score": 2488206.0,
+      "status": "collected",
+      "started_at": "2026-06-06T13:02:32+08:00",
+      "output": "无敌天命_tieba_20260606_130232.jsonl",
+      "review_count": 5,
+      "finished_at": "2026-06-06T13:02:33+08:00"
+    }
+  ],
+  "finished_at": "2026-06-06T13:02:33+08:00",
+  "summary": {
+    "collected_pairs": 1,
+    "skipped_or_empty_pairs": 0,
+    "error_pairs": 0,
+    "total_reviews": 5
+  }
+}

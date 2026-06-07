@@ -1,0 +1,6 @@
+requests>=2.31
+beautifulsoup4>=4.12
+aiotieba>=4.7.1
+fastapi>=0.109.0
+uvicorn>=0.27.0
+pydantic>=2.0
