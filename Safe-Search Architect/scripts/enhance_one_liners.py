@@ -18,15 +18,18 @@ _PROJECT_ROOT = Path(__file__).resolve().parents[2]
 SRC = _PROJECT_ROOT / "Safe-Search Architect" / "src"
 sys.path.insert(0, str(SRC))
 
+from review_critic.agent_client import load_env_files
 from review_critic.models import normalize_space, read_json, read_jsonl, write_json
+
+load_env_files()
 
 RUNS_DIR = _PROJECT_ROOT / "Sentiment Critic" / "data" / "runs"
 INDEX_PATH = _PROJECT_ROOT / "Sentiment Critic" / "data" / "sentiment_index.json"
 NOVELS_PATH = _PROJECT_ROOT / "Sentiment Critic" / "data" / "novels.json"
 
-DEEPSEEK_URL = "https://api.deepseek.com/chat/completions"
-DEEPSEEK_KEY = "sk-14ff889c5e8940e682c1824adf40effd"
-DEEPSEEK_MODEL = "deepseek-v4-pro"
+DEEPSEEK_URL = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com") + "/chat/completions"
+DEEPSEEK_KEY = os.getenv("DEEPSEEK_API_KEY", "")
+DEEPSEEK_MODEL = os.getenv("DEEPSEEK_CHAT_MODEL", "deepseek-v4-pro")
 
 # 需要替换的模板 one_liner 前缀
 BORING_PREFIXES = (

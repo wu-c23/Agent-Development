@@ -181,6 +181,7 @@ body {
 
 </div>
 
+<script src="config.js"></script>
 <script>
 // ============================================================
 // Characters
@@ -247,9 +248,13 @@ let messages = [];
 let isTyping = false;
 let isCreating = false;
 
-const DEEPSEEK_URL = "https://api.deepseek.com/chat/completions";
-const DEEPSEEK_MODEL = "deepseek-v4-pro";
-const API_KEY = "sk-14ff889c5e8940e682c1824adf40effd";
+const DEEPSEEK_URL = (typeof DEEPSEEK_BASE_URL !== "undefined" ? DEEPSEEK_BASE_URL : "https://api.deepseek.com") + "/chat/completions";
+const DEEPSEEK_MODEL = typeof DEEPSEEK_CHAT_MODEL !== "undefined" ? DEEPSEEK_CHAT_MODEL : "deepseek-v4-pro";
+const API_KEY = typeof DEEPSEEK_API_KEY !== "undefined" ? DEEPSEEK_API_KEY : "";
+
+if (!API_KEY || API_KEY === "your-deepseek-api-key-here") {
+  console.warn("DEEPSEEK_API_KEY 未配置！请复制 config.example.js 为 config.js 并填入真实 Key。");
+}
 
 // ============================================================
 // Init
