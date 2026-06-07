@@ -3,3 +3,5 @@ __pycache__/
 *.pyc
 outputs/
 data/douban_subject_cache.json
+*_cookie.txt
+zongheng_cookie.txt
